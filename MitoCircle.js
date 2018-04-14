@@ -7,6 +7,7 @@
 const MitoCircle = class MitoCircle {
     constructor() {
         this._position = [0, 0];
+        this._radius = 0;
     }
 
     getPosition() {
@@ -16,5 +17,13 @@ const MitoCircle = class MitoCircle {
     setPosition(x, y) {
         this._position[0] = x;
         this._position[1] = y;
+    }
+
+    getRadius() {
+        return this._radius;
+    }
+
+    setRadius(radius) {
+        this._radius = radius;
     }
 };
