@@ -11,8 +11,15 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._angle = 0;
         this._angleVelocity = 0;
 
+        this._mass = 0;
+
         this._physicsBodyList = [];
         this._circleList = [];
+    }
+
+    update(interval) {
+        this._position[0] += this._velocity[0] * interval;
+        this._position[1] += this._velocity[1] * interval;
     }
 
     getPosition() {
@@ -49,11 +56,38 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._angleVelocity = angleVelocity;
     }
 
+    getMass() {
+        return this._mass;
+    }
+
+    updateMass() {
+        let mass = 0;
+
+        for (let i = 0; i < this._physicsBodyList.length; i++) {
+            this._physicsBodyList[i].updateMass();
+            mass += this._physicsBodyList[i].getMass();
+        }
+
+        for (let i = 0; i < this._circleList.length; i++) {
+            mass += this._circleList[i].getMass();
+        }
+
+        this._mass = mass;
+    }
+
     getPhysicsBodyList() {
         return this._physicsBodyList;
     }
 
+    addPhysicsBody(physicsBody) {
+        this._physicsBodyList.push(physicsBody);
+    }
+
     getCircleList() {
         return this._circleList;
+    }
+
+    addCircle(circle) {
+        this._circleList.push(circle);
     }
 };

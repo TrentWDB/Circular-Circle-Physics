@@ -10,6 +10,12 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
     }
 
     update(interval) {
+        for (let i = 0; i < this._physicsBodyList.length; i++) {
+            this._physicsBodyList[i].update(interval);
+        }
+    }
 
+    addPhysicsBody(physicsBody) {
+        this._physicsBodyList.push(physicsBody);
     }
 };

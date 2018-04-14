@@ -8,6 +8,8 @@ const MitoCircle = class MitoCircle {
     constructor() {
         this._position = [0, 0];
         this._radius = 0;
+
+        this._density = 1;
     }
 
     getPosition() {
@@ -25,5 +27,9 @@ const MitoCircle = class MitoCircle {
 
     setRadius(radius) {
         this._radius = radius;
+    }
+
+    getMass() {
+        return Math.PI * this._radius * this._radius * this._density;
     }
 };
