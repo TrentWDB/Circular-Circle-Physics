@@ -4,7 +4,7 @@
 
 const MitoMathHelper = class MitoMathHelper {
 
-    /** sums motion1 and motion2 and returns resulting velocity
+    /** sums motion1 and motion2 and returns resulting motion
      * @param motion1
      * @param motion2
      * @returns Array of resulting motion
@@ -17,7 +17,7 @@ const MitoMathHelper = class MitoMathHelper {
         return resultingMotion;
     }
 
-    /** subtracts motion2 from motion1 and returns resulting velocity
+    /** subtracts motion2 from motion1 and returns resulting motion
      * @param motion1
      * @param motion2
      * @returns Array of resulting motion
@@ -30,12 +30,12 @@ const MitoMathHelper = class MitoMathHelper {
         return resultingMotion;
     }
 
-    /** gives resulting translational velocity of velocity1 after collision with velocity2
+    /** gives motion1's resulting motion relative to translative reference motion2
      * @param motion1
      * @param motion2
      * @returns Array of resulting translation motion after collision
      */
-    resolveCollidingTranslationalMotion(motion1, motion2) {
+    relativeMotion1WRT2(motion1, motion2) {
         let motion1WRT2 = this.subtractTranslationalVelocity(motion1, motion2);
         return this.sumTranslationalMotion(motion2, motion1WRT2);
     }
