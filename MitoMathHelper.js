@@ -64,17 +64,6 @@ const MitoMathHelper = class MitoMathHelper {
     }
 
     /**
-     * returns KE * 2 = (mv^2)
-     * @param body
-     * @returns {number}
-     * @private
-     */
-    static _getKineticEnergy(body) {
-        let velocity = body.getVelocity();
-        return body.getMass() * velocity[0] * velocity[0] * velocity[1] * velocity[1];
-    }
-
-    /**
      * returns angle in radians between two bodies
      * @param bodyA
      * @param bodyB
@@ -134,7 +123,6 @@ const MitoMathHelper = class MitoMathHelper {
     static resolveTranslationalElasticCollisions(bodyA, bodyB) {
         let velocityA = MitoMathHelper._getMagnitude(bodyA.getVelocity());
         let velocityB = MitoMathHelper._getMagnitude(bodyB.getVelocity());
-
         let finalVelocityA = MitoMathHelper._getResultingVelocityOfElasticCollision(bodyA, bodyB);
         let finalVelocityB = velocityA + finalVelocityA - velocityB;
         let outGoingAngleA = MitoMathHelper._getOutgoingAngleOfElasticCollision(bodyA, finalVelocityA, bodyB, finalVelocityB);
