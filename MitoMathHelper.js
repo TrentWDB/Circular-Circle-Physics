@@ -15,32 +15,34 @@ const MitoMathHelper = class MitoMathHelper {
      * @private
      */
     static _detectCollisionTime(circleA, velocityA, circleB, velocityB, interval) {
-        let velocityIntA = this._multiplyPoint(velocityA, interval);
-        let invertedVelocityB = this._invertPoint(this._multiplyPoint(velocityB, interval));
-        let combineVelocity = this._addPoints(velocityIntA, invertedVelocityB);
+        let velocityIntA = MitoMathHelper._multiplyPoint(velocityA, interval);
+        let invertedVelocityB = MitoMathHelper._invertPoint(MitoMathHelper._multiplyPoint(velocityB, interval));
+        let combineVelocity = MitoMathHelper._addPoints(velocityIntA, invertedVelocityB);
         let combineMagnitude = Math.hypot(combineVelocity[0], combineVelocity[1]);
-        //Early escape: Calculate bounds based on combine velocities
-        if (!this._detectCollision(circleA.getPosition(),
+        let detectEarlyEscape = MitoMathHelper._detectCollision(
+            circleA.getPosition(),
             circleA.getRadius() + combineMagnitude,
             circleB.getPosition(),
-            circleB.getRadius())) {
+            circleB.getRadius());
+        //Early escape: Calculate bounds based on combine velocities
+        if (!detectEarlyEscape) {
             return null;
         }
         //Calculate closest point on combined velocities to circleB
-        let appliedVelocitiesToPositionA = this._addPoints(circleA.getPosition(), combineVelocity);
-        let closestPoint = this._getClosestPoint(circleA.getPosition(),
+        let appliedVelocitiesToPositionA = MitoMathHelper._addPoints(circleA.getPosition(), combineVelocity);
+        let closestPoint = MitoMathHelper._getClosestPoint(circleA.getPosition(),
             appliedVelocitiesToPositionA,
             circleB.getPosition());
         //If closest circle is in range calculate back off distance
         //Tick percentage should be between 0 - 1
-        let distance = this._distanceBetweenTwoPointsNoSqrt(closestPoint, circleB.getPosition());
+        let distance = MitoMathHelper._distanceBetweenTwoPointsNoSqrt(closestPoint, circleB.getPosition());
         let radiusTotal = circleA.getRadius() + circleB.getRadius();
         radiusTotal *= radiusTotal;
         if (radiusTotal >= distance) {
             let backOff = Math.sqrt(radiusTotal - distance);
             let backPoint = [backOff * (combineVelocity[0] / combineMagnitude), backOff * (combineVelocity[1] / combineMagnitude)];
-            let closestPointWithinVelocity = this._addPoints(closestPoint, this._invertPoint(backPoint));
-            let distanceBetween = this._distanceBetweenTwoPoints(circleA.getPosition(), closestPointWithinVelocity);
+            let closestPointWithinVelocity = MitoMathHelper._addPoints(closestPoint, MitoMathHelper._invertPoint(backPoint));
+            let distanceBetween = MitoMathHelper._distanceBetweenTwoPoints(circleA.getPosition(), closestPointWithinVelocity);
             let tickPercentage = distanceBetween / combineMagnitude;
             if (tickPercentage < 0 || tickPercentage > 1) {
                 return null;
@@ -106,8 +108,8 @@ const MitoMathHelper = class MitoMathHelper {
         if (aToB2 === 0) {
             return linePointA;
         }
-        let atpDotAtb = (aToP[0] * aToB[0]) + (aToP[1] * aToB[1]);
-        let normalizedDistance = atpDotAtb / aToB2;
+        let aToPDoToAToB = (aToP[0] * aToB[0]) + (aToP[1] * aToB[1]);
+        let normalizedDistance = aToPDoToAToB / aToB2;
         return [linePointA[0] + (aToB[0] * normalizedDistance), linePointA[1] + (aToB[1] * normalizedDistance)]
     }
 
