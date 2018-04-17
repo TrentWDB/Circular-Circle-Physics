@@ -3,7 +3,6 @@
  */
 
 const MitoMathHelper = class MitoMathHelper {
-
     /**
      * Calculates the time at which two circles will collide between 0 - 1.
      * @param circleA
@@ -23,19 +22,24 @@ const MitoMathHelper = class MitoMathHelper {
             circleA.getPosition(),
             circleA.getRadius() + combineMagnitude,
             circleB.getPosition(),
-            circleB.getRadius());
+            circleB.getRadius(),
+        );
         //Early escape: Calculate bounds based on combine velocities
         if (!detectEarlyEscape) {
             return null;
         }
+
         //Calculate closest point on combined velocities to circleB
         let appliedVelocitiesToPositionA = MitoMathHelper._addPoints(circleA.getPosition(), combineVelocity);
-        let closestPoint = MitoMathHelper._getClosestPoint(circleA.getPosition(),
+        let closestPoint = MitoMathHelper._getClosestPoint(
+            circleA.getPosition(),
             appliedVelocitiesToPositionA,
-            circleB.getPosition());
+            circleB.getPosition(),
+        );
+
         //If closest circle is in range calculate back off distance
         //Tick percentage should be between 0 - 1
-        let distance = MitoMathHelper._distanceBetweenTwoPointsNoSqrt(closestPoint, circleB.getPosition());
+        let distance = MitoMathHelper._distanceBetweenTwoPointsSquared(closestPoint, circleB.getPosition());
         let radiusTotal = circleA.getRadius() + circleB.getRadius();
         radiusTotal *= radiusTotal;
         if (radiusTotal >= distance) {
@@ -47,8 +51,10 @@ const MitoMathHelper = class MitoMathHelper {
             if (tickPercentage < 0 || tickPercentage > 1) {
                 return null;
             }
+
             return tickPercentage;
         }
+
         return null;
     }
 
@@ -59,9 +65,10 @@ const MitoMathHelper = class MitoMathHelper {
      * @returns {number}
      * @private
      */
-    static _distanceBetweenTwoPointsNoSqrt(pointA, pointB) {
+    static _distanceBetweenTwoPointsSquared(pointA, pointB) {
         let xDifference = pointB[0] - pointA[0];
         let yDifference = pointB[1] - pointA[1];
+
         return xDifference * xDifference + yDifference * yDifference;
     }
 
@@ -88,8 +95,10 @@ const MitoMathHelper = class MitoMathHelper {
     static _detectCollision(pointA, radiusA, pointB, radiusB) {
         let distance = Math.hypot(
             pointA[0] - pointB[0],
-            pointA[1] - pointB[1]);
+            pointA[1] - pointB[1],
+        );
         let radiusTotal = radiusA + radiusB;
+
         return radiusTotal >= distance;
     }
 
@@ -104,12 +113,13 @@ const MitoMathHelper = class MitoMathHelper {
     static _getClosestPoint(linePointA, linePointB, singlePoint) {
         let aToP = [singlePoint[0] - linePointA[0], singlePoint[1] - linePointA[1]];
         let aToB = [linePointB[0] - linePointA[0], linePointB[1] - linePointA[1]];
-        let aToB2 = (aToB[0] * aToB[0]) + (aToB[1] * aToB[1]);
-        if (aToB2 === 0) {
+        let aToBSquared = (aToB[0] * aToB[0]) + (aToB[1] * aToB[1]);
+        if (aToBSquared === 0) {
             return linePointA;
         }
+
         let aToPDoToAToB = (aToP[0] * aToB[0]) + (aToP[1] * aToB[1]);
-        let normalizedDistance = aToPDoToAToB / aToB2;
+        let normalizedDistance = aToPDoToAToB / aToBSquared;
         return [linePointA[0] + (aToB[0] * normalizedDistance), linePointA[1] + (aToB[1] * normalizedDistance)]
     }
 
