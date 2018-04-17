@@ -4,82 +4,143 @@
 
 const MitoMathHelper = class MitoMathHelper {
 
-
-
-    detectCollisionTime(circleA, velocityA, circleB, velocityB, interval){
-
-        let velocityIntA = this.multiplyPoint(velocityA, interval);
-        let velocityIntB = this.multiplyPoint(velocityB, interval);
-        let combineVelocity = this.addPoints(velocityIntA, this.invertPoint(velocityIntB));
+    /**
+     * Calculates the time at which two circles will collide between 0 - 1.
+     * @param circleA
+     * @param velocityA
+     * @param circleB
+     * @param velocityB
+     * @param interval - tick interval
+     * @returns {*}
+     * @private
+     */
+    static _detectCollisionTime(circleA, velocityA, circleB, velocityB, interval) {
+        let velocityIntA = this._multiplyPoint(velocityA, interval);
+        let invertedVelocityB = this._invertPoint(this._multiplyPoint(velocityB, interval));
+        let combineVelocity = this._addPoints(velocityIntA, invertedVelocityB);
         let combineMagnitude = Math.hypot(combineVelocity[0], combineVelocity[1]);
         //Early escape: Calculate bounds based on combine velocities
-        let bounds = new MitoCircle();
-        bounds.setPosition(circleA.getPosition()[0], circleA.getPosition()[1]);
-        bounds.setRadius(circleA.getRadius() +  combineMagnitude);
-        if(!this.detectCollisionCirCir(bounds, circleB)){
+        if (!this._detectCollision(circleA.getPosition(),
+            circleA.getRadius() + combineMagnitude,
+            circleB.getPosition(),
+            circleB.getRadius())) {
             return null;
         }
         //Calculate closest point on combined velocities to circleB
-        let appliedVelocitiesToPositionA = this.addPoints(circleA.getPosition(), combineVelocity);
-        let closestPoint = this.getClosestPoint(circleA.getPosition(),
+        let appliedVelocitiesToPositionA = this._addPoints(circleA.getPosition(), combineVelocity);
+        let closestPoint = this._getClosestPoint(circleA.getPosition(),
             appliedVelocitiesToPositionA,
             circleB.getPosition());
-        let closestCircle = new MitoCircle();
-        closestCircle.setPosition(closestPoint[0], closestPoint[1]);
-        closestCircle.setRadius(circleA.getRadius());
         //If closest circle is in range calculate back off distance
         //Tick percentage should be between 0 - 1
-        let distance = this.distanceBetweenTwoPoints(closestCircle.getPosition(), circleB.getPosition());
+        let distance = this._distanceBetweenTwoPointsNoSqrt(closestPoint, circleB.getPosition());
         let radiusTotal = circleA.getRadius() + circleB.getRadius();
-        if(radiusTotal >= distance){
-            let backOff = Math.sqrt((radiusTotal*radiusTotal) - (distance*distance));
-            let backPoint = [backOff *( combineVelocity[0] / combineMagnitude) , backOff *( combineVelocity[1] / combineMagnitude)];
-            let closestPointWithinVelocity = this.addPoints(closestPoint , this.invertPoint(backPoint));
-            let distanceBetween = this.distanceBetweenTwoPoints(circleA.getPosition(), closestPointWithinVelocity);
+        radiusTotal *= radiusTotal;
+        if (radiusTotal >= distance) {
+            let backOff = Math.sqrt(radiusTotal - distance);
+            let backPoint = [backOff * (combineVelocity[0] / combineMagnitude), backOff * (combineVelocity[1] / combineMagnitude)];
+            let closestPointWithinVelocity = this._addPoints(closestPoint, this._invertPoint(backPoint));
+            let distanceBetween = this._distanceBetweenTwoPoints(circleA.getPosition(), closestPointWithinVelocity);
             let tickPercentage = distanceBetween / combineMagnitude;
-            console.assert(tickPercentage >= 0 && tickPercentage <= 1, "detectCollisionTime: value outside of range: " + tickPercentage );
+            if (tickPercentage < 0 || tickPercentage > 1) {
+                return null;
+            }
             return tickPercentage;
-        }else{
-            return null;
         }
-
+        return null;
     }
 
-    distanceBetweenTwoPoints(pointA, pointB){
+    /**
+     * returns distance ^ 2
+     * @param pointA
+     * @param pointB
+     * @returns {number}
+     * @private
+     */
+    static _distanceBetweenTwoPointsNoSqrt(pointA, pointB) {
+        let xDifference = pointB[0] - pointA[0];
+        let yDifference = pointB[1] - pointA[1];
+        return xDifference * xDifference + yDifference * yDifference;
+    }
+
+    /**
+     * returns distance between two points
+     * @param pointA
+     * @param pointB
+     * @returns {number}
+     * @private
+     */
+    static _distanceBetweenTwoPoints(pointA, pointB) {
         return Math.hypot(pointB[0] - pointA[0], pointB[1] - pointA[1]);
     }
 
-    detectCollisionCirCir(circleA, circleB){
+    /**
+     * detects if two circles overlap
+     * @param pointA
+     * @param radiusA
+     * @param pointB
+     * @param radiusB
+     * @returns {boolean}
+     * @private
+     */
+    static _detectCollision(pointA, radiusA, pointB, radiusB) {
         let distance = Math.hypot(
-            circleB.getPosition()[0] - circleA.getPosition()[0],
-            circleB.getPosition()[1] - circleA.getPosition()[1]);
-        let radiusTotal = circleA.getRadius() + circleB.getRadius();
-        return  radiusTotal >= distance;
+            pointA[0] - pointB[0],
+            pointA[1] - pointB[1]);
+        let radiusTotal = radiusA + radiusB;
+        return radiusTotal >= distance;
     }
 
-    getClosestPoint(linePointA, linePointB, singlePoint){
-        let A_to_P = [singlePoint[0] - linePointA[0], singlePoint[1] - linePointA[1]] ;
-        let A_to_B = [linePointB[0] - linePointA[0], linePointB[1] - linePointA[1]];
-        let atb2 = (A_to_B[0] * A_to_B[0]) + (A_to_B[1] * A_to_B[1]);
-
-        if(atb2 === 0){return linePointA;}
-
-        let atp_dot_atb = (A_to_P[0]*A_to_B[0]) + (A_to_P[1] * A_to_B[1]);
-        let normalizedDistance = atp_dot_atb / atb2;
-        return [linePointA[0] + (A_to_B[0] * normalizedDistance) , linePointA[1] + (A_to_B[1] * normalizedDistance)]
+    /**
+     * return the closest point on a line to a single point
+     * @param linePointA
+     * @param linePointB
+     * @param singlePoint
+     * @returns {*}
+     * @private
+     */
+    static _getClosestPoint(linePointA, linePointB, singlePoint) {
+        let aToP = [singlePoint[0] - linePointA[0], singlePoint[1] - linePointA[1]];
+        let aToB = [linePointB[0] - linePointA[0], linePointB[1] - linePointA[1]];
+        let aToB2 = (aToB[0] * aToB[0]) + (aToB[1] * aToB[1]);
+        if (aToB2 === 0) {
+            return linePointA;
+        }
+        let atpDotAtb = (aToP[0] * aToB[0]) + (aToP[1] * aToB[1]);
+        let normalizedDistance = atpDotAtb / aToB2;
+        return [linePointA[0] + (aToB[0] * normalizedDistance), linePointA[1] + (aToB[1] * normalizedDistance)]
     }
 
-    addPoints(pointA, pointB){
-        return [pointA[0] + pointB[0] , pointA[1] + pointB[1]];
+    /**
+     * add two points
+     * @param pointA
+     * @param pointB
+     * @returns {*[]}
+     * @private
+     */
+    static _addPoints(pointA, pointB) {
+        return [pointA[0] + pointB[0], pointA[1] + pointB[1]];
     }
 
-    invertPoint(point){
-        return [point[0] * -1 , point[1] * -1];
+    /**
+     * invert a point
+     * @param point
+     * @returns {*[]}
+     * @private
+     */
+    static _invertPoint(point) {
+        return [-point[0], -point[1]];
     }
 
-    multiplyPoint(point, value){
-        return [point[0] * value , point[1] * value];
+    /**
+     * multiply a point by a number
+     * @param point
+     * @param value
+     * @returns {*[]}
+     * @private
+     */
+    static _multiplyPoint(point, value) {
+        return [point[0] * value, point[1] * value];
     }
-
 
 };
