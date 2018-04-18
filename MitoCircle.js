@@ -10,6 +10,8 @@ const MitoCircle = class MitoCircle {
         this._radius = 0;
 
         this._density = 1;
+
+        this._boundingCircle = new MitoBoundingCircle();
     }
 
     getPosition() {
@@ -27,6 +29,14 @@ const MitoCircle = class MitoCircle {
 
     setRadius(radius) {
         this._radius = radius;
+    }
+
+    getBoundingCircle() {
+        return this._boundingCircle;
+    }
+
+    updateBoundingCircle() {
+        this._boundingCircle.setRadius(this._radius);
     }
 
     getMass() {

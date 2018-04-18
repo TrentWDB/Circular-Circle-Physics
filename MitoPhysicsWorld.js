@@ -6,6 +6,7 @@
 
 const MitoPhysicsWorld = class MitoPhysicsWorld {
     constructor() {
+        this._updateState = MitoPhysicsWorld.UPDATE_STATE_CONTINUE;
         this._physicsBodyList = [];
     }
 
@@ -19,3 +20,6 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         this._physicsBodyList.push(physicsBody);
     }
 };
+
+MitoPhysicsWorld.UPDATE_STATE_CONTINUE = 0;
+MitoPhysicsWorld.UPDATE_STATE_COLLIDING = 1;
