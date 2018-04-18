@@ -6,6 +6,10 @@
 
 const MitoPhysicsBody = class MitoPhysicsBody {
     constructor() {
+        this._id = MitoPhysicsBody._nextID++;
+
+        this._parentPhysicsBody = null;
+
         this._position = [0, 0];
         this._velocity = [0, 0];
         this._angle = 0;
@@ -24,6 +28,10 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._position[0] += this._velocity[0] * interval;
         this._position[1] += this._velocity[1] * interval;
         this._angle += this._angleVelocity * interval;
+    }
+
+    getID() {
+        return this._id;
     }
 
     getPosition() {
@@ -177,4 +185,10 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     addCircle(circle) {
         this._circleList.push(circle);
     }
+
+    setParentPhysicsBody(physicsBody) {
+        this._parentPhysicsBody = physicsBody;
+    }
 };
+
+MitoPhysicsBody._nextID = 1;
