@@ -197,8 +197,6 @@ const MitoPhysicsBody = class MitoPhysicsBody {
             maxDistance = Math.max(Math.sqrt(dx * dx + dy * dy) + radius, maxDistance);
         }
 
-        console.log(maxDistance);
-
         this._boundingCircle.setPosition(averagePosition[0], averagePosition[1]);
         this._boundingCircle.setRadius(maxDistance);
     }
