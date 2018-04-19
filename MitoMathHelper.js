@@ -174,27 +174,7 @@ const MitoMathHelper = class MitoMathHelper {
     }
 
     /**
-     * returns magnitude of a motion
-     * @param vector
-     * @returns {number}
-     * @private
-     */
-    static _getMagnitude(vector) {
-        return Math.hypot(vector[0], vector[1]);
-    }
-
-    /**
-     * returns magnitude squared
-     * @param vector
-     * @returns {number}
-     * @private
-     */
-    static _getMagnitudeSquared(vector) {
-        return vector[0] * vector[0] + vector[1] * vector[1];
-    }
-
-    /**
-     * returns dot product
+     * Returns the dot product.
      * @param vectorA
      * @param vectorB
      * @returns {number}
@@ -204,37 +184,24 @@ const MitoMathHelper = class MitoMathHelper {
         return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1];
     }
 
-    /**
-     * returns angle in radians between two bodies
-     * @param bodyA
-     * @param bodyB
-     * @returns {number}
-     * @private
-     */
-    static _getAngleBetweenBodies(bodyA, bodyB) {
-        let positionA = bodyA.getPosition();
-        let positionB = bodyB.getPosition();
-        return Math.atan2(positionB[1] - positionA[1], positionB[0] - positionA[0]);
-    }
-
-    /** uses that math formula to find translational velocity of one vector
+    /** Uses a math formula to find the resulting translational velocity of one vector after an elastic collision.
      * @param massA
-     * @param posA
+     * @param positionA
      * @param velocityA
      * @param massB
-     * @param posB
+     * @param positionB
      * @param velocityB
-     * @returns {[]} resulting velocity
+     * @returns {[]}
      * @private
      */
-    static _getOneTranslationalVelocityAfterCollision(massA, posA, velocityA, massB, posB, velocityB) {
+    static _getOneTranslationalVelocityAfterElasticCollision(massA, positionA, velocityA, massB, positionB, velocityB) {
         //TODO: refactor variables names to whatever mr boss boy tells me to
         let partOne = (2 * massB) / (massA + massB);
 
         let velocityDifference = [velocityA[0] - velocityB[0], velocityA[1] - velocityB[1]];
-        let positionDifference = [posA[0] - posB[0], posA[1], posB[1]];
+        let positionDifference = [positionA[0] - positionB[0], positionA[1], positionB[1]];
         let velDiffPosDiffDotProduct = MitoMathHelper._dotProduct(velocityDifference, positionDifference);
-        let positionMagnitudeSquared = MitoMathHelper._getMagnitudeSquared(positionDifference);
+        let positionMagnitudeSquared =  positionDifference[0] * positionDifference[0] + positionDifference[1] * positionDifference[1];
 
         let partTwo = partOne * velDiffPosDiffDotProduct / positionMagnitudeSquared;
         let finalVector = [positionDifference[0] * partTwo, positionDifference[1] * partTwo];
@@ -243,22 +210,23 @@ const MitoMathHelper = class MitoMathHelper {
     }
 
     /**
+     * Returns both resulting translational velocities after collision.
      * @param bodyA
      * @param bodyB
      * @param collisionPoint
-     * @returns {*[]} returns both resulting translational velocities after collision
+     * @returns {[Array, Array]}
      * @private
      */
-    static _getTranslationalVelocitiesAfterCollision(bodyA, bodyB, collisionPoint) {
+    static _getTranslationalVelocitiesAfterElasticCollision(bodyA, bodyB, collisionPoint) {
         let massA = bodyA.getMass();
         let massB = bodyB.getMass();
-        let posA = bodyA.getPosition();
-        let posB = bodyB.getPosition();
+        let positionA = bodyA.getPosition();
+        let positionB = bodyB.getPosition();
         let velocityA = bodyA.getVelocity();
         let velocityB = bodyB.getVelocity();
 
-        let resultingVelocityA = MitoMathHelper._getOneTranslationalVelocityAfterCollision(massA, posA, velocityA, massB, posB, velocityB);
-        let resultingVelocityB = MitoMathHelper._getOneTranslationalVelocityAfterCollision(massB, posB, velocityB, massA, posA, velocityA);
+        let resultingVelocityA = MitoMathHelper._getOneTranslationalVelocityAfterElasticCollision(massA, positionA, velocityA, massB, positionB, velocityB);
+        let resultingVelocityB = MitoMathHelper._getOneTranslationalVelocityAfterElasticCollision(massB, positionB, velocityB, massA, positionA, velocityA);
 
         return [resultingVelocityA, resultingVelocityB];
     }
