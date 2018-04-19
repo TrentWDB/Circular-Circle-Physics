@@ -191,7 +191,7 @@ const MitoMathHelper = class MitoMathHelper {
      * @param massB
      * @param positionB
      * @param velocityB
-     * @returns {[]}
+     * @returns {[numbers, numbers]}
      * @private
      */
     static _getOneTranslationalVelocityAfterElasticCollision(massA, positionA, velocityA, massB, positionB, velocityB) {
@@ -214,10 +214,10 @@ const MitoMathHelper = class MitoMathHelper {
      * @param bodyA
      * @param bodyB
      * @param collisionPoint
-     * @returns {[Array, Array]}
+     * @returns {[[number, number], [number, number]]}
      * @private
      */
-    static _getTranslationalVelocitiesAfterElasticCollision(bodyA, bodyB, collisionPoint) {
+    static getMitoPhysicsBodyVelocitiesAfterCollision(bodyA, bodyB, collisionPoint) {
         let massA = bodyA.getMass();
         let massB = bodyB.getMass();
         let positionA = bodyA.getPosition();
