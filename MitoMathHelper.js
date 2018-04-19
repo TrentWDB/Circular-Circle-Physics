@@ -98,7 +98,6 @@ const MitoMathHelper = class MitoMathHelper {
             return null;
         }
 
-        debugger;
         return tickPercentage * interval;
     }
 
