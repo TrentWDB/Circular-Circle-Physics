@@ -45,17 +45,17 @@ const MitoMathHelper = class MitoMathHelper {
      * @returns {?number}
      */
     static detectMitoCircleCollisionTime(circleA, circleB, positionOffsetA, positionOffsetB, velocityA, velocityB, interval) {
-        let potentialCollision = MitoMathHelper.detectMitoBoundingCirclePotentialCollision(circleA.getBoundingCircle(), circleB.getBoundingCircle(), positionOffsetA, positionOffsetB, velocityA, velocityB, interval);
-        if (!potentialCollision) {
-            return null;
-        }
-
         let relativePositionA = circleA.getPosition();
         let relativePositionB = circleB.getPosition();
         let positionA = [positionOffsetA[0] + relativePositionA[0], positionOffsetA[1] + relativePositionA[1]];
         let positionB = [positionOffsetB[0] + relativePositionB[0], positionOffsetB[1] + relativePositionB[1]];
         let radiusA = circleA.getRadius();
         let radiusB = circleB.getRadius();
+
+        let potentialCollision = MitoMathHelper.detectMitoBoundingCirclePotentialCollision(circleA.getBoundingCircle(), circleB.getBoundingCircle(), positionA, positionB, velocityA, velocityB, interval);
+        if (!potentialCollision) {
+            return null;
+        }
 
         let distanceA = [velocityA[0] * interval, velocityA[1] * interval];
         let invertedDistanceB = [-velocityB[0] * interval, -velocityB[1] * interval];

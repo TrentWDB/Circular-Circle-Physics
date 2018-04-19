@@ -127,44 +127,77 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     }
 
     updateBoundingCircle() {
-        let boundingCircleList = [];
         let averagePosition = [0, 0];
         let maxDistance = 0;
 
+        // update and get the average position of all physics body bounding circles
         for (let i = 0; i < this._physicsBodyList.length; i++) {
-            this._physicsBodyList[i].updateBoundingCircle();
+            let physicsBody = this._circleList[i];
+            let physicsBodyPosition = physicsBody.getPosition();
+            physicsBody.updateBoundingCircle();
+
             let boundingCircle = this._physicsBodyList[i].getBoundingCircle();
-            let position = boundingCircle.getPosition();
+            let boundingCirclePosition = boundingCircle.getPosition();
+
+            let position = [physicsBodyPosition[0] + boundingCirclePosition[0], physicsBodyPosition[1] + boundingCirclePosition[1]];
 
             averagePosition[0] += position[0];
             averagePosition[1] += position[1];
-
-            boundingCircleList.push(boundingCircle);
         }
 
+        // update and get the average position of all circle bounding circles
         for (let i = 0; i < this._circleList.length; i++) {
-            this._circleList[i].updateBoundingCircle();
+            let circle = this._circleList[i];
+            let circlePosition = circle.getPosition();
+            circle.updateBoundingCircle();
+
             let boundingCircle = this._circleList[i].getBoundingCircle();
-            let position = boundingCircle.getPosition();
+            let boundingCirclePosition = boundingCircle.getPosition();
+
+            let position = [circlePosition[0] + boundingCirclePosition[0], circlePosition[1] + boundingCirclePosition[1]];
 
             averagePosition[0] += position[0];
             averagePosition[1] += position[1];
-
-            boundingCircleList.push(boundingCircle);
         }
 
-        averagePosition[0] /= boundingCircleList.length;
-        averagePosition[1] /= boundingCircleList.length;
+        averagePosition[0] /= this._physicsBodyList.length + this._circleList.length;
+        averagePosition[1] /= this._physicsBodyList.length + this._circleList.length;
 
-        for (let i = 0; i < boundingCircleList.length; i++) {
-            let position = boundingCircleList[i].getPosition();
-            let radius = boundingCircleList[i].getRadius();
+        // get maximum distance to a physics body bounding circle edge
+        for (let i = 0; i < this._physicsBodyList.length; i++) {
+            let physicsBody = this._circleList[i];
+            let physicsBodyPosition = physicsBody.getPosition();
+
+            let boundingCircle = this._physicsBodyList[i].getBoundingCircle();
+            let boundingCirclePosition = boundingCircle.getPosition();
+
+            let position = [physicsBodyPosition[0] + boundingCirclePosition[0], physicsBodyPosition[1] + boundingCirclePosition[1]];
+            let radius = boundingCircle.getRadius();
 
             let dx = position[0] - averagePosition[0];
             let dy = position[1] - averagePosition[1];
 
             maxDistance = Math.max(Math.sqrt(dx * dx + dy * dy) + radius, maxDistance);
         }
+
+        // get maximum distance to a circle bounding circle edge
+        for (let i = 0; i < this._circleList.length; i++) {
+            let circle = this._circleList[i];
+            let circlePosition = circle.getPosition();
+
+            let boundingCircle = this._circleList[i].getBoundingCircle();
+            let boundingCirclePosition = boundingCircle.getPosition();
+
+            let position = [circlePosition[0] + boundingCirclePosition[0], circlePosition[1] + boundingCirclePosition[1]];
+            let radius = boundingCircle.getRadius();
+
+            let dx = position[0] - averagePosition[0];
+            let dy = position[1] - averagePosition[1];
+
+            maxDistance = Math.max(Math.sqrt(dx * dx + dy * dy) + radius, maxDistance);
+        }
+
+        console.log(maxDistance);
 
         this._boundingCircle.setPosition(averagePosition[0], averagePosition[1]);
         this._boundingCircle.setRadius(maxDistance);
