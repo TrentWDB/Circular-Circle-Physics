@@ -190,8 +190,17 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
     }
 
     _fakeTimMethod(bodyA, bodyB, collisionPoint) {
-        bodyA.setVelocity(-bodyA.getVelocity()[0], -bodyA.getVelocity()[1]);
-        bodyB.setVelocity(-bodyB.getVelocity()[0], -bodyB.getVelocity()[1]);
+        let positionA = bodyA.getPosition();
+        let positionB = bodyB.getPosition();
+        let velocityA = bodyA.getVelocity();
+        let velocityB = bodyB.getVelocity();
+        let massA = bodyA.getMass();
+        let massB = bodyB.getMass();
+
+        let resultingVelocityA = MitoMathHelper.getPhysicsBodyTranslationalVelocityAfterCollision(positionA, positionB, velocityA, velocityB, massA, massB);
+        let resultingVelocityB = MitoMathHelper.getPhysicsBodyTranslationalVelocityAfterCollision(positionB, positionA, velocityB, velocityA, massB, massA);
+        bodyA.setVelocity(resultingVelocityA[0], resultingVelocityA[1]);
+        bodyB.setVelocity(resultingVelocityB[0], resultingVelocityB[1]);
         // use the collision point, and each bodies velocity, angular velocity, mass, and center of mass to determine
         // and set each bodies resulting velocity and angular velocity
     }
