@@ -8,13 +8,10 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     constructor() {
         this._position = [0, 0];
         this._velocity = [0, 0];
-        this._acceleration = [0, 0];
 
         this._angle = 0;
         this._angleVelocity = 0;
         this._angleAcceleration = 0;
-
-        this._centerOfMass = [0, 0];
 
         this._mass = 0;
 
@@ -43,14 +40,6 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     setVelocity(x, y) {
         this._velocity[0] = x;
         this._velocity[1] = y;
-    }
-
-    getAcceleration() {
-        return this._acceleration;
-    }
-
-    setAccleration(acceleration) {
-        this._acceleration = acceleration;
     }
 
     getAngle() {

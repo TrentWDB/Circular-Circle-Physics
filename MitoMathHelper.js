@@ -155,49 +155,35 @@ const MitoMathHelper = class MitoMathHelper {
         return [point[0] * value, point[1] * value];
     }
 
-    /** subtracts motion2 from motion1 and returns resulting motion
-     * @param motion1
-     * @param motion2
-     * @returns Array of resulting motion
-     * @private
-     */
-    static _subtractTranslationalMotion(motion1, motion2) {
-        let resultingMotion = [];
-        resultingMotion[0] = motion1[0] - motion2[0];
-        resultingMotion[1] = motion1[1] - motion2[1];
-
-        return resultingMotion;
-    }
-
-    /** gives motion1's resulting motion relative to translative reference motion2
-     * @param motion1
-     * @param motion2
-     * @returns Array of resulting translation motion after collision
-     * @private
-     */
-    static _relativeMotion1WRT2(motion1, motion2) {
-        let motion1WRT2 = MitoMathHelper._subtractTranslationalMotion(motion1, motion2);
-        return MitoMathHelper._addPoints(motion2, motion1WRT2);
-    }
-
     /**
      * returns magnitude of a motion
-     * @param motion
+     * @param vector
      * @returns {number}
      * @private
      */
-    static _getMagnitude(motion) {
-        return Math.hypot(motion[0], motion[1]);
+    static _getMagnitude(vector) {
+        return Math.hypot(vector[0], vector[1]);
     }
 
     /**
-     * returns momentum (p = mv)
-     * @param body
-     * @returns {*}
+     * returns magnitude squared
+     * @param vector
+     * @returns {number}
      * @private
      */
-    static _getMomentum(body) {
-        return body.getMass() + MitoMathHelper._getMagnitude(body.getVelocity());
+    static _getMagnitudeSquared(vector) {
+        return vector[0] * vector[0] + vector[1] * vector[1];
+    }
+
+    /**
+     * returns dot product
+     * @param vectorA
+     * @param vectorB
+     * @returns {number}
+     * @private
+     */
+    static _dotProduct(vectorA, vectorB) {
+        return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1];
     }
 
     /**
@@ -213,63 +199,49 @@ const MitoMathHelper = class MitoMathHelper {
         return Math.atan2(positionB[1] - positionA[1], positionB[0] - positionA[0]);
     }
 
-    /**
-     * returns final velocity of bodyA after a perfectly elastic collision
-     * @param bodyA
-     * @param bodyB
-     * @returns {number}
+    /** uses that math formula to find translational velocity of one vector
+     * @param massA
+     * @param posA
+     * @param velocityA
+     * @param massB
+     * @param posB
+     * @param velocityB
+     * @returns {[]} resulting velocity
      * @private
      */
-    static _getResultingVelocityOfElasticCollision(bodyA, bodyB) {
-        let massB = bodyB.getMass();
-        let massA = bodyA.getMass();
-        let velocityA = MitoMathHelper._getMagnitude(bodyA.getVelocity());
-        let momentumB = MitoMathHelper._getMomentum(bodyB);
-        let momentumA = MitoMathHelper._getMomentum(bodyA);
+    static _getOneTranslationalVelocityAfterCollision(massA, posA, velocityA, massB, posB, velocityB) {
+        //TODO: refactor variables names to whatever mr boss boy tells me to
+        let partOne = (2 * massB) / (massA + massB);
 
-        return (2 * momentumB + momentumA - massB * velocityA) / (massA + massB);
+        let velocityDifference = [velocityA[0] - velocityB[0], velocityA[1] - velocityB[1]];
+        let positionDifference = [posA[0] - posB[0], posA[1], posB[1]];
+        let velDiffPosDiffDotProduct = MitoMathHelper._dotProduct(velocityDifference, positionDifference);
+        let positionMagnitudeSquared = MitoMathHelper._getMagnitudeSquared(positionDifference);
+
+        let partTwo = partOne * velDiffPosDiffDotProduct / positionMagnitudeSquared;
+        let finalVector = [positionDifference[0] * partTwo, positionDifference[1] * partTwo];
+
+        return [velocityA[0] - finalVector[0], velocityA[1] - finalVector[1]];
     }
 
     /**
-     * returns outgoing angle of bodyA after a perfectly elastic collision
      * @param bodyA
-     * @param finalVelocityA
      * @param bodyB
-     * @param finalVelocityB
-     * @returns {number}
+     * @param collisionPoint
+     * @returns {*[]} returns both resulting translational velocities after collision
      * @private
      */
-    static _getOutgoingAngleOfElasticCollision(bodyA, finalVelocityA, bodyB, finalVelocityB) {
+    static _getTranslationalVelocitiesAfterCollision(bodyA, bodyB, collisionPoint) {
         let massA = bodyA.getMass();
         let massB = bodyB.getMass();
-        let momentumA = MitoMathHelper._getMomentum(bodyA);
-        let momentumB = MitoMathHelper._getMomentum(bodyB);
-        let incomingAngle = MitoMathHelper._getAngleBetweenBodies(bodyA, bodyB);
-        let cosAngle = Math.cos(incomingAngle);
+        let posA = bodyA.getPosition();
+        let posB = bodyB.getPosition();
+        let velocityA = bodyA.getVelocity();
+        let velocityB = bodyB.getVelocity();
 
-        return cosAngle * (momentumA + momentumB) / (massA * finalVelocityA + massB * finalVelocityB);
-    }
+        let resultingVelocityA = MitoMathHelper._getOneTranslationalVelocityAfterCollision(massA, posA, velocityA, massB, posB, velocityB);
+        let resultingVelocityB = MitoMathHelper._getOneTranslationalVelocityAfterCollision(massB, posB, velocityB, massA, posA, velocityA);
 
-    /**
-     * returns an array of 2 velocities after a perfect elastic collision
-     * @param bodyA
-     * @param bodyB
-     * @returns {*[]}
-     */
-    //TODO: verify this code actually works...
-    static resolveTranslationalElasticCollisions(bodyA, bodyB) {
-        let velocityA = MitoMathHelper._getMagnitude(bodyA.getVelocity());
-        let velocityB = MitoMathHelper._getMagnitude(bodyB.getVelocity());
-        let finalVelocityA = MitoMathHelper._getResultingVelocityOfElasticCollision(bodyA, bodyB);
-        let finalVelocityB = velocityA + finalVelocityA - velocityB;
-        let outGoingAngleA = MitoMathHelper._getOutgoingAngleOfElasticCollision(bodyA, finalVelocityA, bodyB, finalVelocityB);
-        let outGoingAngleB = MitoMathHelper._getOutgoingAngleOfElasticCollision(bodyB, finalVelocityB, bodyA, finalVelocityA);
-
-        let finalVelocityAX = finalVelocityA * Math.cos(outGoingAngleA);
-        let finalVelocityAY = finalVelocityA * Math.sin(outGoingAngleA);
-        let finalVelocityBX = finalVelocityB * Math.cos(outGoingAngleB);
-        let finalVelocityBY = finalVelocityB * Math.sin(outGoingAngleB);
-
-        return [[finalVelocityAX, finalVelocityAY], [finalVelocityBX, finalVelocityBY]];
+        return [resultingVelocityA, resultingVelocityB];
     }
 };
