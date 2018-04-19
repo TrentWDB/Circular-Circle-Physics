@@ -52,18 +52,26 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 let physicsBody = this._unprocessedPhysicsBodyList[i];
                 let collisionEventList = this._physicsBodyIDToCollisionEventListMap[physicsBody.getID()];
 
+                // if there are no collision events its because the collided physics body already handled it
+                if (!collisionEventList) {
+                    continue;
+                }
+
                 for (let a = 0; a < collisionEventList.length; a++) {
                     let event = collisionEventList[a];
                     let time = event.time;
 
                     // remove the current event from the event list
-                    this._collisionTimesToCollisionEventListMap[time] = this._collisionTimesToCollisionEventListMap[time].filter(currentEvent => {
-                        return currentEvent !== event;
-                    });
-                    // if the new event list is empty then delete it and remove its queue entry
-                    if (this._collisionTimesToCollisionEventListMap[time].length === 0) {
-                        this._collisionTimesQueue.remove(time);
-                        delete this._collisionTimesToCollisionEventListMap[time];
+                    if (this._collisionTimesToCollisionEventListMap[time]) {
+                        this._collisionTimesToCollisionEventListMap[time] = this._collisionTimesToCollisionEventListMap[time].filter(currentEvent => {
+                            return currentEvent !== event;
+                        });
+
+                        // if the new event list is empty then delete it and remove its queue entry
+                        if (this._collisionTimesToCollisionEventListMap[time].length === 0) {
+                            this._collisionTimesQueue.remove(time);
+                            delete this._collisionTimesToCollisionEventListMap[time];
+                        }
                     }
                 }
 
@@ -182,6 +190,8 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
     }
 
     _fakeTimMethod(bodyA, bodyB, collisionPoint) {
+        bodyA.setVelocity(-bodyA.getVelocity()[0], -bodyA.getVelocity()[1]);
+        bodyB.setVelocity(-bodyB.getVelocity()[0], -bodyB.getVelocity()[1]);
         // use the collision point, and each bodies velocity, angular velocity, mass, and center of mass to determine
         // and set each bodies resulting velocity and angular velocity
     }
