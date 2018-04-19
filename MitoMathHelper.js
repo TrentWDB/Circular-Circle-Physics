@@ -23,7 +23,7 @@ const MitoMathHelper = class MitoMathHelper {
         let radiusB = boundingCircleB.getRadius();
 
         let distanceA = [velocityA[0] * interval, velocityA[1] * interval];
-        let invertedDistanceB = [-velocityA[0] * interval, -velocityA[1] * interval];
+        let invertedDistanceB = [-velocityB[0] * interval, -velocityB[1] * interval];
         let combinedDistance = [distanceA[0] + invertedDistanceB[0], distanceA[1] + invertedDistanceB[1]];
         let combinedMagnitude = Math.hypot(combinedDistance[0], combinedDistance[1]);
         let maximumDistanceAllowance = radiusA + radiusB + combinedMagnitude;
@@ -98,6 +98,7 @@ const MitoMathHelper = class MitoMathHelper {
             return null;
         }
 
+        debugger;
         return tickPercentage * interval;
     }
 
