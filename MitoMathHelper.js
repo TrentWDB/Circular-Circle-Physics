@@ -58,9 +58,14 @@ const MitoMathHelper = class MitoMathHelper {
         let radiusB = circleB.getRadius();
 
         let distanceA = [velocityA[0] * interval, velocityA[1] * interval];
-        let invertedDistanceB = [-velocityA[0] * interval, -velocityA[1] * interval];
-        let combinedDistance = MitoMathHelper._addPoints(distanceA, invertedDistanceB);
+        let invertedDistanceB = [-velocityB[0] * interval, -velocityB[1] * interval];
+        let combinedDistance = [distanceA[0] + invertedDistanceB[0], distanceA[1] + invertedDistanceB[1]];
         let combinedMagnitude = Math.hypot(combinedDistance[0], combinedDistance[1]);
+
+        // if they're moving in the same direction with the same velocity then they're not colliding
+        if (!combinedMagnitude) {
+            return null;
+        }
 
         // Calculate closest point on combined velocities to circleB
         let positionACombinedDistancePoint = [
@@ -77,7 +82,7 @@ const MitoMathHelper = class MitoMathHelper {
         let positionBToClosestPointDistanceSquared = MitoMathHelper._distanceSquaredBetweenTwoPoints(positionACombinedDistanceClosestPoint, positionB);
         let radiusTotal = radiusA + radiusB;
         let radiusTotalSquared = radiusTotal * radiusTotal;
-        if (radiusTotalSquared > positionBToClosestPointDistanceSquared) {
+        if (radiusTotalSquared < positionBToClosestPointDistanceSquared) {
             return null
         }
 
@@ -166,16 +171,5 @@ const MitoMathHelper = class MitoMathHelper {
         let aToPDoToAToB = (aToP[0] * aToB[0]) + (aToP[1] * aToB[1]);
         let normalizedDistance = aToPDoToAToB / aToBSquared;
         return [linePointA[0] + (aToB[0] * normalizedDistance), linePointA[1] + (aToB[1] * normalizedDistance)]
-    }
-
-    /**
-     * Add two points.
-     * @param pointA
-     * @param pointB
-     * @returns {[number, number]}
-     * @private
-     */
-    static _addPoints(pointA, pointB) {
-        return [pointA[0] + pointB[0], pointA[1] + pointB[1]];
     }
 };
