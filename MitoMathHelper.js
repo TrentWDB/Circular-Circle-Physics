@@ -37,18 +37,20 @@ const MitoMathHelper = class MitoMathHelper {
      * Calculates the time at which two circles will collide in the interval.
      * @param circleA
      * @param circleB
+     * @param parentBodyA
+     * @param parentBodyB
      * @param positionOffsetA
      * @param positionOffsetB
-     * @param velocityA
-     * @param velocityB
+     * @param velocityOffsetA
+     * @param velocityOffsetB
      * @param interval
      * @returns {?number}
      */
-    static detectMitoCircleCollisionTime(circleA, circleB, positionOffsetA, positionOffsetB, velocityA, velocityB, interval) {
-        let relativePositionA = circleA.getPosition();
-        let relativePositionB = circleB.getPosition();
-        let positionA = [positionOffsetA[0] + relativePositionA[0], positionOffsetA[1] + relativePositionA[1]];
-        let positionB = [positionOffsetB[0] + relativePositionB[0], positionOffsetB[1] + relativePositionB[1]];
+    static detectMitoCircleCollisionTime(circleA, circleB, parentBodyA, parentBodyB, positionOffsetA, positionOffsetB, velocityOffsetA, velocityOffsetB, interval) {
+        let positionA = circleA.getWorldPosition();
+        let positionB = circleB.getWorldPosition();
+        let velocityA = circleA.getWorldVelocity();
+        let velocityB = circleB.getWorldVelocity();
         let radiusA = circleA.getRadius();
         let radiusB = circleB.getRadius();
 
@@ -103,17 +105,13 @@ const MitoMathHelper = class MitoMathHelper {
 
     /**
      * Returns the point most likely to be colliding between two colliding circles based on their radii and positions.
-     * @param positionOffsetA
-     * @param positionOffsetB
      * @param circleA
      * @param circleB
+     * @param positionA
+     * @param positionB
      * @returns {[number, number]}
      */
-    static detectCollidingCirclesCollisionPoint(circleA, circleB, positionOffsetA, positionOffsetB) {
-        let relativePositionA = circleA.getPosition();
-        let relativePositionB = circleB.getPosition();
-        let positionA = [positionOffsetA[0] + relativePositionA[0], positionOffsetA[1] + relativePositionA[1]];
-        let positionB = [positionOffsetB[0] + relativePositionB[0], positionOffsetB[1] + relativePositionB[1]];
+    static detectCollidingCirclesCollisionPoint(circleA, circleB, positionA, positionB) {
         let radiusA = circleA.getRadius();
         let radiusB = circleB.getRadius();
 
@@ -122,6 +120,10 @@ const MitoMathHelper = class MitoMathHelper {
 
         let dx = positionB[0] - positionA[0];
         let dy = positionB[1] - positionA[1];
+
+        if (Math.abs(Math.sqrt(dx * dx + dy * dy) - combinedRadii) > 0.000001) {
+            // throw new Error('The distance between circles at the time of expected collision is ' + Math.sqrt(dx * dx + dy * dy) + ' and combined radii is ' + combinedRadii + ', the difference is ' + Math.abs(Math.sqrt(dx * dx + dy * dy) - combinedRadii) + '.');
+        }
 
         return [positionA[0] + dx * percentThrough, positionA[1] + dy * percentThrough];
     }
@@ -137,7 +139,6 @@ const MitoMathHelper = class MitoMathHelper {
      * @returns {[number, number]}
      */
     static getPhysicsBodyTranslationalVelocityAfterCollision(positionA, positionB, velocityA, velocityB, massA, massB) {
-        // TODO: refactor variables names to whatever mr boss boy tells me to
         let partOne = (2 * massB) / (massA + massB);
 
         let positionDifference = [positionA[0] - positionB[0], positionA[1] - positionB[1]];
@@ -149,6 +150,65 @@ const MitoMathHelper = class MitoMathHelper {
         let finalVector = [positionDifference[0] * partTwo, positionDifference[1] * partTwo];
 
         return [velocityA[0] - finalVector[0], velocityA[1] - finalVector[1]];
+    }
+
+    static calculateImpulseParameter(bodyA, bodyB, collisionPoint, normalB) {
+        let velocityA = bodyA.getVelocity();
+        let velocityB = bodyB.getVelocity();
+        let angularVelocityA = bodyA.getAngularVelocity();
+        let angularVelocityB = bodyB.getAngularVelocity();
+        let centerOfMassA = bodyA.getWorldCenterOfMass();
+        let centerOfMassB = bodyB.getWorldCenterOfMass();
+        let massA = bodyA.getMass();
+        let massB = bodyB.getMass();
+        let elasticity = Math.max(bodyA.getElasticity(), bodyB.getElasticity());
+
+        let collisionRadiusA = [collisionPoint[0] - centerOfMassA[0], collisionPoint[1] - centerOfMassA[1]];
+        let collisionRadiusB = [collisionPoint[0] - centerOfMassB[0], collisionPoint[1] - centerOfMassB[1]];
+
+        let collisionPointTranslatedRotationalVelocityA = this.applyAngularVelocity(angularVelocityA, collisionRadiusA);
+        let collisionPointTranslatedRotationalVelocityB = this.applyAngularVelocity(angularVelocityB, collisionRadiusB);
+        let collisionPointVelocityA = [velocityA[0] + collisionPointTranslatedRotationalVelocityA[0], velocityA[1] + collisionPointTranslatedRotationalVelocityA[1]];
+        let collisionPointVelocityB = [velocityB[0] + collisionPointTranslatedRotationalVelocityB[0], velocityB[1] + collisionPointTranslatedRotationalVelocityB[1]];
+        let collisionPointRelativeVelocity = [collisionPointVelocityA[0] - collisionPointVelocityB[0], collisionPointVelocityA[1] - collisionPointVelocityB[1]];
+
+        let radiusACrossNormal = this.crossProduct(collisionRadiusA, normalB);
+        let radiusBCrossNormal = this.crossProduct(collisionRadiusB, normalB);
+
+        let top = -(1 + elasticity) * this._dotProduct(collisionPointRelativeVelocity, normalB);
+        let bottom = 1 / massA + 1 / massB + radiusACrossNormal * radiusACrossNormal / bodyA.getMomentOfInertia() + radiusBCrossNormal * radiusBCrossNormal / bodyB.getMomentOfInertia();
+
+        return top / bottom;
+    }
+
+    /**
+     * Rotates a point around the origin.
+     * @param point
+     * @param angle
+     * @returns {[number, number]}
+     */
+    static rotatePoint(point, angle) {
+        return [point[0] * Math.cos(angle) - point[1] * Math.sin(angle), point[1] * Math.cos(angle) + point[0] * Math.sin(angle)];
+    }
+
+    /**
+     *
+     * @param angularVelocity
+     * @param relativePosition
+     * @returns {[number, number]}
+     */
+    static applyAngularVelocity(angularVelocity, relativePosition) {
+        return [-angularVelocity * relativePosition[1], angularVelocity * relativePosition[0]];
+    }
+
+    /**
+     * Returns the cross product between two 2d vectors.
+     * @param vectorA
+     * @param vectorB
+     * @returns {number}
+     */
+    static crossProduct(vectorA, vectorB) {
+        return vectorA[0] * vectorB[1] - vectorA[1] * vectorB[0];
     }
 
     /**
