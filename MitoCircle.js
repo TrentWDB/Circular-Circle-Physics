@@ -11,7 +11,7 @@ const MitoCircle = class MitoCircle {
         this._position = [0, 0];
         this._radius = 0;
 
-        this._density = 1;
+        this._density = 0.001;
 
         this._boundingCircle = new MitoBoundingCircle();
     }
@@ -27,7 +27,7 @@ const MitoCircle = class MitoCircle {
 
     getWorldPosition() {
         let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
-        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngle() : 0;
+        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getAngle() : 0;
 
         let position = MitoMathHelper.rotatePoint(this._position, parentAngle);
 
@@ -38,7 +38,11 @@ const MitoCircle = class MitoCircle {
         let parentVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldVelocity() : [0, 0];
         let parentAngularVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngularVelocity() : 0;
 
-        let appliedAngularVelocity = MitoMathHelper.applyAngularVelocity(parentAngularVelocity, MitoMathHelper.rotatePoint(this._position, parentAngularVelocity));
+        let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
+        let worldPosition = this.getWorldPosition();
+        let rotatedPosition = [worldPosition[0] - parentPosition[0], worldPosition[1] - parentPosition[1]];
+
+        let appliedAngularVelocity = parentAngularVelocity ? MitoMathHelper.convertAngularVelocity(parentAngularVelocity, rotatedPosition) : [0, 0];
 
         return [parentVelocity[0] + appliedAngularVelocity[0], parentVelocity[1] + appliedAngularVelocity[1]];
     }

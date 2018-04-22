@@ -18,7 +18,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 0.8;
+        this._elasticity = 1;
 
         this._physicsBodyList = [];
         this._circleList = [];
@@ -47,7 +47,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 
     getWorldPosition() {
         let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
-        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngle() : 0;
+        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getAngle() : 0;
 
         let position = MitoMathHelper.rotatePoint(this._position, parentAngle);
 
@@ -67,7 +67,11 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         let parentVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldVelocity() : [0, 0];
         let parentAngularVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngularVelocity() : 0;
 
-        let appliedAngularVelocity = MitoMathHelper.applyAngularVelocity(parentAngularVelocity, MitoMathHelper.rotatePoint(this._position, parentAngularVelocity));
+        let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
+        let worldPosition = this.getWorldPosition();
+        let rotatedPosition = [worldPosition[0] - parentPosition[0], worldPosition[1] - parentPosition[1]];
+
+        let appliedAngularVelocity = parentAngularVelocity ? MitoMathHelper.convertAngularVelocity(parentAngularVelocity, rotatedPosition) : [0, 0];
 
         return [parentVelocity[0] + appliedAngularVelocity[0] + this._velocity[0], parentVelocity[1] + appliedAngularVelocity[1] + this._velocity[1]];
     }
@@ -245,6 +249,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         return this._momentOfInertia;
     }
 
+    // http://www.wolframalpha.com/input/?i=Integrate%5B(m*((r*cos(a)%2Bj)%5E2%2B(r*sin(a)%2Bk)%5E2)),+%7Br,+0,+z%7D,+%7Ba,+0,+2*pi%7D%5D
     updateMomentOfInertia() {
         // requires mass and center of mass to be updated
         let momentOfInertia = 0;
@@ -261,7 +266,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
             momentOfInertia += 2 / 3 * Math.PI * density * radius * (3 * dx * dx + 3 * dy * dy + radius * radius);
         }
 
-        this._momentOfInertia = momentOfInertia;
+        this._momentOfInertia = momentOfInertia * 100;
     }
 
     // updateMomentOfInertia() {

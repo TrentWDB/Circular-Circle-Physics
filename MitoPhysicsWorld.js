@@ -41,6 +41,8 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 let bodyB = collisionEvent.bodyB;
                 let collisionPoint = collisionEvent.point;
                 let normal = collisionEvent.normal;
+                let collisionPointVelocityA = collisionEvent.pointVelocityA;
+                let collisionPointVelocityB = collisionEvent.pointVelocityB;
 
                 while (bodyA.getParentPhysicsBody()) {
                     bodyA = bodyA.getParentPhysicsBody();
@@ -50,7 +52,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 }
 
                 // process the collision
-                this._fakeTimMethod(bodyA, bodyB, collisionPoint, normal);
+                this._fakeTimMethod(bodyA, bodyB, collisionPoint, normal, collisionPointVelocityA, collisionPointVelocityB);
 
                 this._unprocessedPhysicsBodyList.push(bodyA);
                 this._unprocessedPhysicsBodyList.push(bodyB);
@@ -167,7 +169,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
             for (let a = 0; a < circleListB.length; a++) {
                 let circleB = circleListB[a];
 
-                let relativeTime = MitoMathHelper.detectMitoCircleCollisionTime(circleA, circleB, bodyA, bodyB, positionA, positionB, velocityA, velocityB, interval);
+                let relativeTime = MitoMathHelper.detectMitoCircleCollisionTime(circleA, circleB, interval);
                 if (relativeTime === null) {
                     continue;
                 }
@@ -187,7 +189,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
 
                 // push the collision event info
                 let time = timeOffset + relativeTime;
-                let collisionEvent = this._createCollisionEvent(time, bodyA, bodyB, collisionPoint, collisionNormalB);
+                let collisionEvent = this._createCollisionEvent(time, bodyA, bodyB, collisionPoint, collisionNormalB, circleVelocityA, circleVelocityB);
 
                 this._collisionTimesQueue.insert(time);
 
@@ -203,7 +205,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         }
     }
 
-    _fakeTimMethod(bodyA, bodyB, collisionPoint, normalB) {
+    _fakeTimMethod(bodyA, bodyB, collisionPoint, normalB, collisionPointVelocityA, collisionPointVelocityB) {
         let velocityA = bodyA.getVelocity();
         let velocityB = bodyB.getVelocity();
         let angularVelocityA = bodyA.getAngularVelocity();
@@ -213,7 +215,10 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         let massA = bodyA.getMass();
         let massB = bodyB.getMass();
 
-        let impulseParameter = MitoMathHelper.calculateImpulseParameter(bodyA, bodyB, collisionPoint, normalB);
+        let impulseParameter = MitoMathHelper.calculateImpulseParameter(bodyA, bodyB, collisionPoint, normalB, collisionPointVelocityA, collisionPointVelocityB);
+        if (impulseParameter === null) {
+            return;
+        }
 
         let appliedNormal = [impulseParameter * normalB[0], impulseParameter * normalB[1]];
         let collisionRadiusA = [collisionPoint[0] - centerOfMassA[0], collisionPoint[1] - centerOfMassA[1]];
@@ -226,18 +231,20 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         let resultingAngularVelocityB = angularVelocityB - MitoMathHelper.crossProduct(collisionRadiusB, appliedNormal) / bodyB.getMomentOfInertia();
 
         bodyA.setVelocity(resultingVelocityA[0], resultingVelocityA[1]);
-        // bodyA.setAngularVelocity(resultingAngularVelocityA);
+        bodyA.setAngularVelocity(resultingAngularVelocityA);
         bodyB.setVelocity(resultingVelocityB[0], resultingVelocityB[1]);
-        // bodyB.setAngularVelocity(resultingAngularVelocityB);
+        bodyB.setAngularVelocity(resultingAngularVelocityB);
     }
 
-    _createCollisionEvent(time, bodyA, bodyB, collisionPoint, normalB) {
+    _createCollisionEvent(time, bodyA, bodyB, collisionPoint, normalB, collisionPointVelocityA, collisionPointVelocityB) {
         return {
             time: time,
             bodyA: bodyA,
             bodyB: bodyB,
             point: collisionPoint,
             normal: normalB,
+            pointVelocityA: collisionPointVelocityA,
+            pointVelocityB: collisionPointVelocityB,
         }
     }
 };

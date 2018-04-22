@@ -37,16 +37,10 @@ const MitoMathHelper = class MitoMathHelper {
      * Calculates the time at which two circles will collide in the interval.
      * @param circleA
      * @param circleB
-     * @param parentBodyA
-     * @param parentBodyB
-     * @param positionOffsetA
-     * @param positionOffsetB
-     * @param velocityOffsetA
-     * @param velocityOffsetB
      * @param interval
      * @returns {?number}
      */
-    static detectMitoCircleCollisionTime(circleA, circleB, parentBodyA, parentBodyB, positionOffsetA, positionOffsetB, velocityOffsetA, velocityOffsetB, interval) {
+    static detectMitoCircleCollisionTime(circleA, circleB, interval) {
         let positionA = circleA.getWorldPosition();
         let positionB = circleB.getWorldPosition();
         let velocityA = circleA.getWorldVelocity();
@@ -152,11 +146,7 @@ const MitoMathHelper = class MitoMathHelper {
         return [velocityA[0] - finalVector[0], velocityA[1] - finalVector[1]];
     }
 
-    static calculateImpulseParameter(bodyA, bodyB, collisionPoint, normalB) {
-        let velocityA = bodyA.getVelocity();
-        let velocityB = bodyB.getVelocity();
-        let angularVelocityA = bodyA.getAngularVelocity();
-        let angularVelocityB = bodyB.getAngularVelocity();
+    static calculateImpulseParameter(bodyA, bodyB, collisionPoint, normalB, collisionPointVelocityA, collisionPointVelocityB) {
         let centerOfMassA = bodyA.getWorldCenterOfMass();
         let centerOfMassB = bodyB.getWorldCenterOfMass();
         let massA = bodyA.getMass();
@@ -166,16 +156,18 @@ const MitoMathHelper = class MitoMathHelper {
         let collisionRadiusA = [collisionPoint[0] - centerOfMassA[0], collisionPoint[1] - centerOfMassA[1]];
         let collisionRadiusB = [collisionPoint[0] - centerOfMassB[0], collisionPoint[1] - centerOfMassB[1]];
 
-        let collisionPointTranslatedRotationalVelocityA = this.applyAngularVelocity(angularVelocityA, collisionRadiusA);
-        let collisionPointTranslatedRotationalVelocityB = this.applyAngularVelocity(angularVelocityB, collisionRadiusB);
-        let collisionPointVelocityA = [velocityA[0] + collisionPointTranslatedRotationalVelocityA[0], velocityA[1] + collisionPointTranslatedRotationalVelocityA[1]];
-        let collisionPointVelocityB = [velocityB[0] + collisionPointTranslatedRotationalVelocityB[0], velocityB[1] + collisionPointTranslatedRotationalVelocityB[1]];
         let collisionPointRelativeVelocity = [collisionPointVelocityA[0] - collisionPointVelocityB[0], collisionPointVelocityA[1] - collisionPointVelocityB[1]];
+        let collisionRelativeNormalVelocity = this._dotProduct(collisionPointRelativeVelocity, normalB);
+
+        // if the relative normal velocity is negative then the objects are going towards each other
+        if (collisionRelativeNormalVelocity >= 0) {
+            return null;
+        }
 
         let radiusACrossNormal = this.crossProduct(collisionRadiusA, normalB);
         let radiusBCrossNormal = this.crossProduct(collisionRadiusB, normalB);
 
-        let top = -(1 + elasticity) * this._dotProduct(collisionPointRelativeVelocity, normalB);
+        let top = -(1 + elasticity) * collisionRelativeNormalVelocity;
         let bottom = 1 / massA + 1 / massB + radiusACrossNormal * radiusACrossNormal / bodyA.getMomentOfInertia() + radiusBCrossNormal * radiusBCrossNormal / bodyB.getMomentOfInertia();
 
         return top / bottom;
@@ -192,7 +184,7 @@ const MitoMathHelper = class MitoMathHelper {
     }
 
     /**
-     *
+     * Converts angular velocity into translational velocity at a given instant.
      * @param angularVelocity
      * @param relativePosition
      * @returns {[number, number]}
@@ -201,6 +193,18 @@ const MitoMathHelper = class MitoMathHelper {
         // let averageRelativePosition = MitoMathHelper.rotatePoint(relativePosition, angularVelocity / 2); TODO is this more correct since its the average angular velocity over the thing?
         // return [-angularVelocity * averageRelativePosition[1], angularVelocity * averageRelativePosition[0]];
         return [-angularVelocity * relativePosition[1], angularVelocity * relativePosition[0]];
+    }
+
+    /**
+     * Converts the angular velocity into translational velocity.
+     * @param angularVelocity
+     * @param relativePosition
+     * @returns {[number, number]}
+     */
+    static convertAngularVelocity(angularVelocity, relativePosition) {
+        let finalPoint = MitoMathHelper.rotatePoint(relativePosition, angularVelocity);
+
+        return [finalPoint[0] - relativePosition[0], finalPoint[1] - relativePosition[1]];
     }
 
     /**
