@@ -198,6 +198,8 @@ const MitoMathHelper = class MitoMathHelper {
      * @returns {[number, number]}
      */
     static applyAngularVelocity(angularVelocity, relativePosition) {
+        // let averageRelativePosition = MitoMathHelper.rotatePoint(relativePosition, angularVelocity / 2); TODO is this more correct since its the average angular velocity over the thing?
+        // return [-angularVelocity * averageRelativePosition[1], angularVelocity * averageRelativePosition[0]];
         return [-angularVelocity * relativePosition[1], angularVelocity * relativePosition[0]];
     }
 

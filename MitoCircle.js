@@ -38,7 +38,7 @@ const MitoCircle = class MitoCircle {
         let parentVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldVelocity() : [0, 0];
         let parentAngularVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngularVelocity() : 0;
 
-        let appliedAngularVelocity = MitoMathHelper.applyAngularVelocity(parentAngularVelocity, this._position);
+        let appliedAngularVelocity = MitoMathHelper.applyAngularVelocity(parentAngularVelocity, MitoMathHelper.rotatePoint(this._position, parentAngularVelocity));
 
         return [parentVelocity[0] + appliedAngularVelocity[0], parentVelocity[1] + appliedAngularVelocity[1]];
     }
@@ -49,6 +49,10 @@ const MitoCircle = class MitoCircle {
 
     setRadius(radius) {
         this._radius = radius;
+    }
+
+    getDensity() {
+        return this._density;
     }
 
     getBoundingCircle() {

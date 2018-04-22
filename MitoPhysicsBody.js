@@ -18,7 +18,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 1;
+        this._elasticity = 0.8;
 
         this._physicsBodyList = [];
         this._circleList = [];
@@ -67,7 +67,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         let parentVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldVelocity() : [0, 0];
         let parentAngularVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngularVelocity() : 0;
 
-        let appliedAngularVelocity = MitoMathHelper.applyAngularVelocity(parentAngularVelocity, this._position);
+        let appliedAngularVelocity = MitoMathHelper.applyAngularVelocity(parentAngularVelocity, MitoMathHelper.rotatePoint(this._position, parentAngularVelocity));
 
         return [parentVelocity[0] + appliedAngularVelocity[0] + this._velocity[0], parentVelocity[1] + appliedAngularVelocity[1] + this._velocity[1]];
     }
@@ -249,28 +249,47 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         // requires mass and center of mass to be updated
         let momentOfInertia = 0;
 
-        for (let i = 0; i < this._physicsBodyList.length; i++) {
-            let childMass = this._physicsBodyList[i].getMass();
-            let childCenterOfMass = this._physicsBodyList[i].getCenterOfMass();
-            let dx = childCenterOfMass[0] - this._centerOfMass[0];
-            let dy = childCenterOfMass[1] - this._centerOfMass[1];
-            let inertiaRadius = dx * dx + dy * dy;
+        let completeCircleList = this.getCompleteCircleList();
+        for (let i = 0; i < completeCircleList.length; i++) {
+            let circle = completeCircleList[i];
+            let position = circle.getPosition();
+            let density = circle.getDensity();
+            let radius = circle.getRadius();
+            let dx = position[0] - this._centerOfMass[0];
+            let dy = position[1] - this._centerOfMass[1];
 
-            momentOfInertia += childMass * inertiaRadius;
-        }
-
-        for (let i = 0; i < this._circleList.length; i++) {
-            let circleMass = this._circleList[i].getMass();
-            let circleCenterOfMass = this._circleList[i].getPosition();
-            let dx = circleCenterOfMass[0] - this._centerOfMass[0];
-            let dy = circleCenterOfMass[1] - this._centerOfMass[1];
-            let inertiaRadius = dx * dx + dy * dy;
-
-            momentOfInertia += circleMass * inertiaRadius;
+            momentOfInertia += 2 / 3 * Math.PI * density * radius * (3 * dx * dx + 3 * dy * dy + radius * radius);
         }
 
         this._momentOfInertia = momentOfInertia;
     }
+
+    // updateMomentOfInertia() {
+    //     // requires mass and center of mass to be updated
+    //     let momentOfInertia = 0;
+    //
+    //     for (let i = 0; i < this._physicsBodyList.length; i++) {
+    //         let childMass = this._physicsBodyList[i].getMass();
+    //         let childCenterOfMass = this._physicsBodyList[i].getCenterOfMass();
+    //         let dx = childCenterOfMass[0] - this._centerOfMass[0];
+    //         let dy = childCenterOfMass[1] - this._centerOfMass[1];
+    //         let inertiaRadius = dx * dx + dy * dy;
+    //
+    //         momentOfInertia += childMass * inertiaRadius;
+    //     }
+    //
+    //     for (let i = 0; i < this._circleList.length; i++) {
+    //         let circleMass = this._circleList[i].getMass();
+    //         let circleCenterOfMass = this._circleList[i].getPosition();
+    //         let dx = circleCenterOfMass[0] - this._centerOfMass[0];
+    //         let dy = circleCenterOfMass[1] - this._centerOfMass[1];
+    //         let inertiaRadius = dx * dx + dy * dy;
+    //
+    //         momentOfInertia += circleMass * inertiaRadius;
+    //     }
+    //
+    //     this._momentOfInertia = momentOfInertia;
+    // }
 
     getElasticity() {
         return this._elasticity;
@@ -306,6 +325,25 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._circleList.push(circle);
 
         circle.setParentPhysicsBody(this);
+    }
+
+    getCompleteCircleList() {
+        let circleList = [];
+
+        for (let i = 0; i < this._physicsBodyList.length; i++) {
+            let childPhysicsBody = this._physicsBodyList[i];
+            let childCircleList = childPhysicsBody.getCompleteCircleList();
+
+            for (let a = 0; a < childCircleList.length; a++) {
+                circleList.push(childCircleList[a]);
+            }
+        }
+
+        for (let i = 0; i < this._circleList.length; i++) {
+            circleList.push(this._circleList[i]);
+        }
+
+        return circleList;
     }
 };
 

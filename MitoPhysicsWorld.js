@@ -136,7 +136,6 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         if (!potentialCollision) {
             return;
         }
-        console.log('potential collision');
 
         // continue down the tree of physics objects
         let physicsBodyListA = bodyA.getPhysicsBodyList();
@@ -172,8 +171,6 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 if (relativeTime === null) {
                     continue;
                 }
-
-                console.log('hit');
 
                 let circlePositionA = circleA.getWorldPosition();
                 let circlePositionB = circleB.getWorldPosition();
@@ -229,9 +226,9 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         let resultingAngularVelocityB = angularVelocityB - MitoMathHelper.crossProduct(collisionRadiusB, appliedNormal) / bodyB.getMomentOfInertia();
 
         bodyA.setVelocity(resultingVelocityA[0], resultingVelocityA[1]);
-        bodyA.setAngularVelocity(resultingAngularVelocityA);
+        // bodyA.setAngularVelocity(resultingAngularVelocityA);
         bodyB.setVelocity(resultingVelocityB[0], resultingVelocityB[1]);
-        bodyB.setAngularVelocity(resultingAngularVelocityB);
+        // bodyB.setAngularVelocity(resultingAngularVelocityB);
     }
 
     _createCollisionEvent(time, bodyA, bodyB, collisionPoint, normalB) {
