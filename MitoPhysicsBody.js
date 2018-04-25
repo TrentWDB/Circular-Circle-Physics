@@ -20,7 +20,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 0.4;
+        this._elasticity = 0.1;
 
         this._physicsBodyList = [];
         this._circleList = [];

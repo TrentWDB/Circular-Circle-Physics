@@ -34,7 +34,7 @@ const MitoPriorityQueue = class MitoPriorityQueue {
         let currentValue = this._values[index];
         let nextValue = this._values[index - 1];
 
-        if (nextValue < currentValue) {
+        if (nextValue <= currentValue) {
             this._values[index - 1] = currentValue;
             this._values[index] = nextValue;
         }
