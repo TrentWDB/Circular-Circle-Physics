@@ -69,6 +69,14 @@ const MitoMathHelper = class MitoMathHelper {
             return null;
         }
 
+        // check if the circles are inside each other
+        let radiusTotal = radiusA + radiusB;
+        let radiusTotalSquared = radiusTotal * radiusTotal;
+        let circleDistanceSquared = vectorFromCircleAToB[0] * vectorFromCircleAToB[0] + vectorFromCircleAToB[1] * vectorFromCircleAToB[1];
+        if (circleDistanceSquared <= radiusTotalSquared + MitoMathHelper.EPSILON) {
+            return 0;
+        }
+
         // Calculate closest point on combined velocities to circleB
         let positionACombinedDistancePoint = [
             positionA[0] + combinedDistance[0],
@@ -82,17 +90,11 @@ const MitoMathHelper = class MitoMathHelper {
         // If closest circle is in range calculate back off distance
         // Tick percentage should be between 0 - 1
         let positionBToClosestPointDistanceSquared = Math.max(MitoMathHelper._distanceSquaredBetweenTwoPoints(positionACombinedDistanceClosestPoint, positionB) - MitoMathHelper.EPSILON, 0);
-        let radiusTotal = radiusA + radiusB;
-        let radiusTotalSquared = radiusTotal * radiusTotal;
         if (positionBToClosestPointDistanceSquared > radiusTotalSquared) {
             return null
         }
 
         let backOffAmount = Math.sqrt(radiusTotalSquared - positionBToClosestPointDistanceSquared) + MitoMathHelper.EPSILON;
-        // if the back off amount is greater than the combined magnitude that means that the circles are inside of each other
-        if (backOffAmount > combinedMagnitude) {
-            return 0;
-        }
         let backOffVector = [-backOffAmount * (combinedDistance[0] / combinedMagnitude), -backOffAmount * (combinedDistance[1] / combinedMagnitude)];
         let closestPointWithinVelocity = [
             positionACombinedDistanceClosestPoint[0] + backOffVector[0],

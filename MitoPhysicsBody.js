@@ -20,7 +20,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 0.2;
+        this._elasticity = 0.4;
 
         this._physicsBodyList = [];
         this._circleList = [];
@@ -62,12 +62,12 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 
     update(interval) {
         if (this._velocity[0] * this._velocity[0] + this._velocity[1] * this._velocity[1] < MitoMathHelper.EPSILON) {
-            // this._velocity[0] = 0;
-            // this._velocity[1] = 0;
+            this._velocity[0] = 0;
+            this._velocity[1] = 0;
         }
 
         if (this._angularVelocity * this._angularVelocity < MitoMathHelper.EPSILON) {
-            // this._angularVelocity = 0;
+            this._angularVelocity = 0;
         }
 
         this._position[0] += this._velocity[0] * interval;
