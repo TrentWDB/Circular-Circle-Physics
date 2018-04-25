@@ -12,7 +12,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         this._physicsBodyList = [];
         this._physicsBodyIDToPhysicsBodyMap = {};
 
-        this._unprocessedPhysicsBodyList = [];
+        this._unprocessedPhysicsBodyIDSet = {};
         this._physicsBodyIDToCollisionEventListMap = {};
     }
 
@@ -59,13 +59,15 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 // process the collision
                 this._fakeTimMethod(bodyA, bodyB, collisionPoint, normal, collisionPointVelocityA, collisionPointVelocityB);
 
-                this._unprocessedPhysicsBodyList.push(bodyA);
-                this._unprocessedPhysicsBodyList.push(bodyB);
+                this._unprocessedPhysicsBodyIDSet[bodyA.getID()] = true;
+                this._unprocessedPhysicsBodyIDSet[bodyB.getID()] = true;
             }
 
             // remove all collision events that include the unprocessed physics bodies
-            for (let i = 0; i < this._unprocessedPhysicsBodyList.length; i++) {
-                let physicsBody = this._unprocessedPhysicsBodyList[i];
+            let unprocessedPhysicsBodyIDList = Object.keys(this._unprocessedPhysicsBodyIDSet);
+            for (let i = 0; i < unprocessedPhysicsBodyIDList.length; i++) {
+                let physicsBodyID = unprocessedPhysicsBodyIDList[i];
+                let physicsBody = this._physicsBodyIDToPhysicsBodyMap[physicsBodyID];
                 let collisionEventList = this._physicsBodyIDToCollisionEventListMap[physicsBody.getID()];
 
                 // if there are no collision events its because the collided physics body already handled it
@@ -96,8 +98,9 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
             }
 
             // process the unprocessed/updated physics bodies
-            for (let i = 0; i < this._unprocessedPhysicsBodyList.length; i++) {
-                let bodyA = this._unprocessedPhysicsBodyList[i];
+            for (let i = 0; i < unprocessedPhysicsBodyIDList.length; i++) {
+                let bodyAID = unprocessedPhysicsBodyIDList[i];
+                let bodyA = this._physicsBodyIDToPhysicsBodyMap[bodyAID];
 
                 for (let a = 0; a < this._physicsBodyList.length; a++) {
                     let bodyB = this._physicsBodyList[a];
@@ -109,7 +112,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 }
             }
 
-            this._unprocessedPhysicsBodyList = [];
+            this._unprocessedPhysicsBodyIDSet = {};
 
             // move forward in time to the next collision or the end of the tick
             let nextCollisionTime = this._collisionTimesQueue.pop();
