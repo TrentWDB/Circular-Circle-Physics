@@ -20,7 +20,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 0.1;
+        this._elasticity = 0.2;
 
         this._physicsBodyList = [];
         this._circleList = [];
@@ -28,7 +28,8 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._boundingCircle = new MitoBoundingCircle();
     }
 
-    update(interval) {
+    updateAcceleration(interval) {
+        // sadly this method needs to be at the beginning of each tick since we don't detect collisions with acceleration
         // remove this part later, translational acceleration
         this._velocity[0] += this._acceleration[0] * interval;
         this._velocity[1] += this._acceleration[1] * interval;
@@ -56,6 +57,17 @@ const MitoPhysicsBody = class MitoPhysicsBody {
             this._angularVelocity = 0;
         } else {
             this._angularVelocity -= angularFriction * Math.sign(this._angularVelocity);
+        }
+    }
+
+    update(interval) {
+        if (this._velocity[0] * this._velocity[0] + this._velocity[1] * this._velocity[1] < MitoMathHelper.EPSILON) {
+            // this._velocity[0] = 0;
+            // this._velocity[1] = 0;
+        }
+
+        if (this._angularVelocity * this._angularVelocity < MitoMathHelper.EPSILON) {
+            // this._angularVelocity = 0;
         }
 
         this._position[0] += this._velocity[0] * interval;
@@ -107,7 +119,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         return [parentVelocity[0] + appliedAngularVelocity[0] + this._velocity[0], parentVelocity[1] + appliedAngularVelocity[1] + this._velocity[1]];
     }
 
-    accelerate(x, y) {
+    setAcceleration(x, y) {
         this._acceleration[0] = x;
         this._acceleration[1] = y;
     }

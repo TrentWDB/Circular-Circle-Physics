@@ -17,6 +17,11 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
     }
 
     update(interval) {
+        // apply accelerations
+        for (let i = 0; i < this._physicsBodyList.length; i++) {
+            this._physicsBodyList[i].updateAcceleration(interval);
+        }
+
         // get initial collisions
         for (let i = 0; i < this._physicsBodyList.length; i++) {
             let bodyA = this._physicsBodyList[i];
@@ -100,7 +105,7 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                         continue;
                     }
 
-                    this._determinePhysicsBodyCollisions(bodyA, bodyB, [0, 0], [0, 0], [0, 0], [0, 0], remainingInterval, processedInterval);
+                    this._determinePhysicsBodyCollisions(bodyA, bodyB, remainingInterval, processedInterval);
                 }
             }
 
@@ -184,8 +189,9 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 let collisionPoint = MitoMathHelper.detectCollidingCirclesCollisionPoint(circleA, circleB, futurePositionA, futurePositionB);
 
                 let collisionNormalB = [collisionPoint[0] - circlePositionB[0], collisionPoint[1] - circlePositionB[1]];
-                collisionNormalB[0] /= circleB.getRadius();
-                collisionNormalB[1] /= circleB.getRadius();
+                let collisionNormalBLength = Math.hypot(collisionNormalB[0], collisionNormalB[1]);
+                collisionNormalB[0] /= collisionNormalBLength;
+                collisionNormalB[1] /= collisionNormalBLength;
 
                 // push the collision event info
                 let time = timeOffset + relativeTime;

@@ -30,7 +30,7 @@ const MitoMathHelper = class MitoMathHelper {
         let maximumDistanceAllowanceSquared = maximumDistanceAllowance * maximumDistanceAllowance;
         let distanceBetweenCirclesSquared = MitoMathHelper._distanceSquaredBetweenTwoPoints(positionA, positionB);
 
-        return distanceBetweenCirclesSquared <= maximumDistanceAllowanceSquared;
+        return distanceBetweenCirclesSquared <= maximumDistanceAllowanceSquared + MitoMathHelper.EPSILON;
     }
 
     /**
@@ -63,32 +63,43 @@ const MitoMathHelper = class MitoMathHelper {
             return null;
         }
 
+        let vectorFromCircleAToB = [positionB[0] - positionA[0], positionB[1] - positionA[1]];
+        let dotProduct = MitoMathHelper._dotProduct(vectorFromCircleAToB, combinedDistance);
+        if (dotProduct <= 0) {
+            return null;
+        }
+
         // Calculate closest point on combined velocities to circleB
         let positionACombinedDistancePoint = [
             positionA[0] + combinedDistance[0],
             positionA[1] + combinedDistance[1]
         ];
-        let positionACombinedDistanceClosestPoint = MitoMathHelper._getClosestPointOnLine(
+        let positionACombinedDistanceClosestPoint = MitoMathHelper._getClosestPointOnInfiniteLine(
             [positionA, positionACombinedDistancePoint],
             positionB,
         );
 
         // If closest circle is in range calculate back off distance
         // Tick percentage should be between 0 - 1
-        let positionBToClosestPointDistanceSquared = MitoMathHelper._distanceSquaredBetweenTwoPoints(positionACombinedDistanceClosestPoint, positionB);
+        let positionBToClosestPointDistanceSquared = Math.max(MitoMathHelper._distanceSquaredBetweenTwoPoints(positionACombinedDistanceClosestPoint, positionB) - MitoMathHelper.EPSILON, 0);
         let radiusTotal = radiusA + radiusB;
         let radiusTotalSquared = radiusTotal * radiusTotal;
-        if (radiusTotalSquared < positionBToClosestPointDistanceSquared) {
+        if (positionBToClosestPointDistanceSquared > radiusTotalSquared) {
             return null
         }
 
-        let backOffAmount = Math.sqrt(radiusTotalSquared - positionBToClosestPointDistanceSquared); // TODO shouldn't this be Math.sqrt(radiusTotalSquared) - Math.sqrt(positionBToClosestPointDistanceSquared) ?????
-        let invertedBackPoint = [-backOffAmount * (combinedDistance[0] / combinedMagnitude), -backOffAmount * (combinedDistance[1] / combinedMagnitude)]; // TODO since this is now invertedBackPoint, shouldn't this be forward point or something?
+        let backOffAmount = Math.sqrt(radiusTotalSquared - positionBToClosestPointDistanceSquared) + MitoMathHelper.EPSILON;
+        // if the back off amount is greater than the combined magnitude that means that the circles are inside of each other
+        if (backOffAmount > combinedMagnitude) {
+            return 0;
+        }
+        let backOffVector = [-backOffAmount * (combinedDistance[0] / combinedMagnitude), -backOffAmount * (combinedDistance[1] / combinedMagnitude)];
         let closestPointWithinVelocity = [
-            positionACombinedDistanceClosestPoint[0] + invertedBackPoint[0],
-            positionACombinedDistanceClosestPoint[1] + invertedBackPoint[1],
+            positionACombinedDistanceClosestPoint[0] + backOffVector[0],
+            positionACombinedDistanceClosestPoint[1] + backOffVector[1],
         ];
         let distanceBetween = MitoMathHelper._distanceBetweenTwoPoints(positionA, closestPointWithinVelocity);
+
         let tickPercentage = distanceBetween / combinedMagnitude;
         if (tickPercentage < 0 || tickPercentage > 1) {
             return null;
@@ -116,6 +127,7 @@ const MitoMathHelper = class MitoMathHelper {
         let dy = positionB[1] - positionA[1];
 
         if (Math.abs(Math.sqrt(dx * dx + dy * dy) - combinedRadii) > 0.000001) {
+            console.error('COLLISION DISTANCE: ', Math.sqrt(dx * dx + dy * dy) - combinedRadii);
             // throw new Error('The distance between circles at the time of expected collision is ' + Math.sqrt(dx * dx + dy * dy) + ' and combined radii is ' + combinedRadii + ', the difference is ' + Math.abs(Math.sqrt(dx * dx + dy * dy) - combinedRadii) + '.');
         }
 
@@ -243,13 +255,13 @@ const MitoMathHelper = class MitoMathHelper {
     }
 
     /**
-     * Return the closest point on a line to a single point.
+     * Return the closest point on an infinite line to a single point.
      * @param line
      * @param singlePoint
      * @returns {[number, number]}
      * @private
      */
-    static _getClosestPointOnLine(line, singlePoint) {
+    static _getClosestPointOnInfiniteLine(line, singlePoint) {
         let linePointA = line[0];
         let linePointB = line[1];
         let aToP = [singlePoint[0] - linePointA[0], singlePoint[1] - linePointA[1]];
@@ -275,3 +287,5 @@ const MitoMathHelper = class MitoMathHelper {
         return vectorA[0] * vectorB[0] + vectorA[1] * vectorB[1];
     }
 };
+
+MitoMathHelper.EPSILON = 0.0000001;
