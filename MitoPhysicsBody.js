@@ -15,10 +15,12 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._angle = 0;
         this._angularVelocity = 0;
 
+        this._acceleration = [0, 0];
+
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 1;
+        this._elasticity = 0.1;
 
         this._physicsBodyList = [];
         this._circleList = [];
@@ -27,6 +29,35 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     }
 
     update(interval) {
+        // remove this part later, translational acceleration
+        this._velocity[0] += this._acceleration[0] * interval;
+        this._velocity[1] += this._acceleration[1] * interval;
+        this._acceleration[0] = 0;
+        this._acceleration[1] = 0;
+
+        // translational velocity
+        let speedSquared = this._velocity[0] * this._velocity[0] + this._velocity[1] * this._velocity[1];
+        let frictionSpeedSquared = MitoPhysicsBody.FRICTION * interval * MitoPhysicsBody.FRICTION * interval;
+
+        if (speedSquared < frictionSpeedSquared) {
+            this._velocity[0] = 0;
+            this._velocity[1] = 0;
+        } else {
+            let speed = Math.sqrt(speedSquared);
+            let frictionSpeed = Math.sqrt(frictionSpeedSquared);
+
+            this._velocity[0] -= this._velocity[0] / speed * frictionSpeed;
+            this._velocity[1] -= this._velocity[1] / speed * frictionSpeed;
+        }
+
+        // angular velocity
+        let angularFriction = MitoPhysicsBody.ANGULAR_FRICTION * interval;
+        if (Math.abs(this._angularVelocity) < angularFriction) {
+            this._angularVelocity = 0;
+        } else {
+            this._angularVelocity -= angularFriction * Math.sign(this._angularVelocity);
+        }
+
         this._position[0] += this._velocity[0] * interval;
         this._position[1] += this._velocity[1] * interval;
         this._angle += this._angularVelocity * interval;
@@ -74,6 +105,11 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         let appliedAngularVelocity = parentAngularVelocity ? MitoMathHelper.convertAngularVelocity(parentAngularVelocity, rotatedPosition) : [0, 0];
 
         return [parentVelocity[0] + appliedAngularVelocity[0] + this._velocity[0], parentVelocity[1] + appliedAngularVelocity[1] + this._velocity[1]];
+    }
+
+    accelerate(x, y) {
+        this._acceleration[0] = x;
+        this._acceleration[1] = y;
     }
 
     getAngle() {
@@ -266,7 +302,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
             momentOfInertia += 0.5 * Math.PI * density * radius * radius * (2 * dx * dx + 2 * dy * dy + radius * radius);
         }
 
-        this._momentOfInertia = momentOfInertia * 10;
+        this._momentOfInertia = momentOfInertia * 4;
     }
 
     // updateMomentOfInertia() {
@@ -353,3 +389,6 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 };
 
 MitoPhysicsBody._nextID = 1;
+
+MitoPhysicsBody.FRICTION = 0.0005;
+MitoPhysicsBody.ANGULAR_FRICTION = 0.00001;
