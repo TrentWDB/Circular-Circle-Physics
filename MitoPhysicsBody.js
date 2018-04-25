@@ -249,7 +249,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         return this._momentOfInertia;
     }
 
-    // http://www.wolframalpha.com/input/?i=Integrate%5B(m*((r*cos(a)%2Bj)%5E2%2B(r*sin(a)%2Bk)%5E2)),+%7Br,+0,+z%7D,+%7Ba,+0,+2*pi%7D%5D
+    // http://www.wolframalpha.com/input/?i=Integrate%5Br(m*((r*cos(a)%2Bj)%5E2%2B(r*sin(a)%2Bk)%5E2)),+%7Br,+0,+z%7D,+%7Ba,+0,+2*pi%7D%5D
     updateMomentOfInertia() {
         // requires mass and center of mass to be updated
         let momentOfInertia = 0;
@@ -263,10 +263,10 @@ const MitoPhysicsBody = class MitoPhysicsBody {
             let dx = position[0] - this._centerOfMass[0];
             let dy = position[1] - this._centerOfMass[1];
 
-            momentOfInertia += 2 / 3 * Math.PI * density * radius * (3 * dx * dx + 3 * dy * dy + radius * radius);
+            momentOfInertia += 0.5 * Math.PI * density * radius * radius * (2 * dx * dx + 2 * dy * dy + radius * radius);
         }
 
-        this._momentOfInertia = momentOfInertia * 100;
+        this._momentOfInertia = momentOfInertia * 10;
     }
 
     // updateMomentOfInertia() {
