@@ -2,8 +2,8 @@
  * Created by Trent on 4/13/2018.
  */
 
-const MitoBoundingCircle = window.require ? require('./MitoBoundingCircle') : MitoBoundingCircle;
-const MitoMathHelper = window.require ? require('./MitoMathHelper') : MitoMathHelper;
+const MitoBoundingCircle = require('./MitoBoundingCircle');
+const MitoMathHelper = require('./MitoMathHelper');
 
 'use strict';
 

@@ -2,8 +2,8 @@
  * Created by Trent on 4/13/2018.
  */
 
-const MitoMathHelper = window.require ? require('./MitoMathHelper') : MitoMathHelper;
-const MitoPriorityQueue = window.require ? require('./MitoPriorityQueue') : MitoPriorityQueue;
+const MitoMathHelper = require('./MitoMathHelper');
+const MitoPriorityQueue = require('./MitoPriorityQueue');
 
 'use strict';
 
