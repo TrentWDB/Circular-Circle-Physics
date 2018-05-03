@@ -42,3 +42,5 @@ const MitoPriorityQueue = class MitoPriorityQueue {
         this._move(index - 1);
     }
 };
+
+module.exports = MitoPriorityQueue;

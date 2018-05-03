@@ -291,3 +291,5 @@ const MitoMathHelper = class MitoMathHelper {
 };
 
 MitoMathHelper.EPSILON = 0.0000001;
+
+module.exports = MitoMathHelper;

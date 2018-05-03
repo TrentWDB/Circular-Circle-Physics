@@ -2,6 +2,9 @@
  * Created by Trent on 4/13/2018.
  */
 
+const MitoBoundingCircle = window.require ? require('./MitoBoundingCircle') : MitoBoundingCircle;
+const MitoMathHelper = window.require ? require('./MitoMathHelper') : MitoMathHelper;
+
 'use strict';
 
 const MitoPhysicsBody = class MitoPhysicsBody {
@@ -20,7 +23,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._mass = 0;
         this._centerOfMass = [0, 0];
         this._momentOfInertia = 0;
-        this._elasticity = 0;
+        this._elasticity = 0.1;
 
         this._physicsBodyList = [];
         this._circleList = [];
@@ -404,3 +407,5 @@ MitoPhysicsBody._nextID = 1;
 
 MitoPhysicsBody.FRICTION = 0.0005;
 MitoPhysicsBody.ANGULAR_FRICTION = 0.00001;
+
+module.exports = MitoPhysicsBody;

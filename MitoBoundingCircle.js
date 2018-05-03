@@ -27,3 +27,5 @@ const MitoBoundingCircle = class MitoBoundingCircle {
         this._radius = radius;
     }
 };
+
+module.exports = MitoBoundingCircle;

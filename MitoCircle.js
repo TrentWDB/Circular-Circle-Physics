@@ -2,6 +2,8 @@
  * Created by Trent on 4/13/2018.
  */
 
+const MitoBoundingCircle = window.require ? require('./MitoBoundingCircle') : MitoBoundingCircle;
+
 'use strict';
 
 const MitoCircle = class MitoCircle {
@@ -79,3 +81,5 @@ const MitoCircle = class MitoCircle {
         this._parentPhysicsBody = physicsBody;
     }
 };
+
+module.exports = MitoCircle;
