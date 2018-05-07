@@ -31,6 +31,9 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
 
             for (let a = i + 1; a < this._physicsBodyList.length; a++) {
                 let bodyB = this._physicsBodyList[a];
+                if (!bodyB.checkCollidable(bodyA)) {
+                    continue;
+                }
 
                 this._determinePhysicsBodyCollisions(bodyA, bodyB, interval, 0);
             }
@@ -108,6 +111,10 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 for (let a = 0; a < this._physicsBodyList.length; a++) {
                     let bodyB = this._physicsBodyList[a];
                     if (bodyA === bodyB) {
+                        continue;
+                    }
+
+                    if (!bodyB.checkCollidable(bodyA)) {
                         continue;
                     }
 

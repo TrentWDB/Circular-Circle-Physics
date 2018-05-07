@@ -28,6 +28,8 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._physicsBodyList = [];
         this._circleList = [];
 
+        this._collisionBlackListGroups = [];
+
         this._boundingCircle = new MitoBoundingCircle();
     }
 
@@ -401,9 +403,40 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 
         return circleList;
     }
+
+    getCollisionBlackListGroups() {
+        return this._collisionBlackListGroups;
+    }
+
+    addCollisionBlackListGroup(blackListGroup) {
+        this._collisionBlackListGroups.push(blackListGroup);
+    }
+
+    // TODO do this way better
+    checkCollidable(body) {
+        let collisionBlackListGroups = body.getCollisionBlackListGroups();
+        for (let i = 0; i < this._collisionBlackListGroups.length; i++) {
+            let currentBlackListGroup = this._collisionBlackListGroups[i];
+
+            for (let a = 0; a < collisionBlackListGroups.length; a++) {
+                let checkBlackListGroup = collisionBlackListGroups[a];
+
+                if (currentBlackListGroup === checkBlackListGroup) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    static getNewCollisionGroup() {
+        return MitoPhysicsBody._nextCollisionGroup++;
+    }
 };
 
 MitoPhysicsBody._nextID = 1;
+MitoPhysicsBody._nextCollisionGroup = 1;
 
 MitoPhysicsBody.FRICTION = 0.0005;
 MitoPhysicsBody.ANGULAR_FRICTION = 0.00001;
