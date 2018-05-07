@@ -422,12 +422,12 @@ const MitoPhysicsBody = class MitoPhysicsBody {
                 let checkBlackListGroup = collisionBlackListGroups[a];
 
                 if (currentBlackListGroup === checkBlackListGroup) {
-                    return true;
+                    return false;
                 }
             }
         }
 
-        return false;
+        return true;
     }
 
     static getNewCollisionGroup() {

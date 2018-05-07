@@ -144,6 +144,11 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         this._physicsBodyIDToPhysicsBodyMap[physicsBody.getID()] = physicsBody;
     }
 
+    removePhysicsBody(physicsBody) {
+        this._physicsBodyList = this._physicsBodyList.filter(currentPhysicsBody => currentPhysicsBody.getID() !== physicsBody.getID());
+        delete this._physicsBodyIDToPhysicsBodyMap[physicsBody.getID()];
+    }
+
     _determinePhysicsBodyCollisions(bodyA, bodyB, interval, timeOffset) {
         let boundingCircleA = bodyA.getBoundingCircle();
         let boundingCircleB = bodyB.getBoundingCircle();
