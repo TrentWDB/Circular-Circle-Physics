@@ -145,8 +145,14 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
     }
 
     removePhysicsBody(physicsBody) {
+        if (!this._physicsBodyIDToPhysicsBodyMap[physicsBody.getID()]) {
+            return false;
+        }
+
         this._physicsBodyList = this._physicsBodyList.filter(currentPhysicsBody => currentPhysicsBody.getID() !== physicsBody.getID());
         delete this._physicsBodyIDToPhysicsBodyMap[physicsBody.getID()];
+
+        return true;
     }
 
     _determinePhysicsBodyCollisions(bodyA, bodyB, interval, timeOffset) {

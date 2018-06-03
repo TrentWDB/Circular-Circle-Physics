@@ -4,6 +4,7 @@
 
 const MitoBoundingCircle = require('./MitoBoundingCircle');
 const MitoMathHelper = require('./MitoMathHelper');
+const MitoPhysicsWorld = require('./MitoPhysicsWorld');
 
 'use strict';
 
@@ -17,6 +18,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._velocity = [0, 0];
         this._angle = 0;
         this._angularVelocity = 0;
+        this._scale = 1;
 
         this._acceleration = [0, 0];
 
@@ -85,7 +87,10 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     }
 
     getPosition() {
-        return this._position;
+        // only apply scaling to the position if it's relative, aka if it's a child
+        let scale = this._parentPhysicsBody ? this.getWorldScale() : 1;
+
+        return [this._position[0] * scale, this._position[1] * scale];
     }
 
     setPosition(x, y) {
@@ -93,11 +98,15 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         this._position[1] = y;
     }
 
+    getRelativePosition() {
+        return this._position;
+    }
+
     getWorldPosition() {
         let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
-        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getAngle() : 0;
+        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngle() : 0;
 
-        let position = MitoMathHelper.rotatePoint(this._position, parentAngle);
+        let position = MitoMathHelper.rotatePoint(this.getPosition(), parentAngle);
 
         return [parentPosition[0] + position[0], parentPosition[1] + position[1]];
     }
@@ -138,7 +147,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     }
 
     getWorldAngle() {
-        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getAngle() : 0;
+        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngle() : 0;
 
         return parentAngle + this._angle;
     }
@@ -155,6 +164,20 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         let parentAngularVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngularVelocity() : 0;
 
         return parentAngularVelocity + this._angularVelocity;
+    }
+
+    getScale() {
+        return this._scale;
+    }
+
+    setScale(scale) {
+        this._scale = scale;
+    }
+
+    getWorldScale() {
+        let parentScale = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldScale() : 1;
+
+        return parentScale * this._scale;
     }
 
     getMass() {
@@ -229,7 +252,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 
         // update and get the average position of all physics body bounding circles
         for (let i = 0; i < this._physicsBodyList.length; i++) {
-            let physicsBody = this._circleList[i];
+            let physicsBody = this._physicsBodyList[i];
             let physicsBodyPosition = physicsBody.getPosition();
             physicsBody.updateBoundingCircle();
 
@@ -262,7 +285,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 
         // get maximum distance to a physics body bounding circle edge
         for (let i = 0; i < this._physicsBodyList.length; i++) {
-            let physicsBody = this._circleList[i];
+            let physicsBody = this._physicsBodyList[i];
             let physicsBodyPosition = physicsBody.getPosition();
 
             let boundingCircle = this._physicsBodyList[i].getBoundingCircle();
@@ -428,6 +451,10 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         }
 
         return true;
+    }
+
+    removePhysicsBody(physicsBody) {
+        this._physicsBodyList = this._physicsBodyList.filter(currentPhysicsBody => currentPhysicsBody.getID() !== physicsBody.getID());
     }
 
     static getNewCollisionGroup() {

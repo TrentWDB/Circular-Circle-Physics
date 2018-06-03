@@ -13,6 +13,7 @@ const MitoCircle = class MitoCircle {
 
         this._position = [0, 0];
         this._radius = 0;
+        this._scale = 1;
 
         this._density = 0.001;
 
@@ -20,7 +21,9 @@ const MitoCircle = class MitoCircle {
     }
 
     getPosition() {
-        return this._position;
+        let scale = this._parentPhysicsBody ? this.getWorldScale() : 1;
+
+        return [this._position[0] * scale, this._position[1] * scale];
     }
 
     setPosition(x, y) {
@@ -30,9 +33,9 @@ const MitoCircle = class MitoCircle {
 
     getWorldPosition() {
         let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
-        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getAngle() : 0;
+        let parentAngle = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngle() : 0;
 
-        let position = MitoMathHelper.rotatePoint(this._position, parentAngle);
+        let position = MitoMathHelper.rotatePoint(this.getPosition(), parentAngle);
 
         return [parentPosition[0] + position[0], parentPosition[1] + position[1]];
     }
@@ -51,11 +54,31 @@ const MitoCircle = class MitoCircle {
     }
 
     getRadius() {
+        let scale = this.getWorldScale();
+
+        return this._radius * scale;
+    }
+
+    getRelativeRadius() {
         return this._radius;
     }
 
     setRadius(radius) {
         this._radius = radius;
+    }
+
+    getScale() {
+        return this._scale;
+    }
+
+    setScale(scale) {
+        this._scale = scale;
+    }
+
+    getWorldScale() {
+        let parentScale = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldScale() : 1;
+
+        return parentScale * this._scale;
     }
 
     getDensity() {
@@ -67,11 +90,13 @@ const MitoCircle = class MitoCircle {
     }
 
     updateBoundingCircle() {
-        this._boundingCircle.setRadius(this._radius);
+        this._boundingCircle.setRadius(this.getRadius());
     }
 
     getMass() {
-        return Math.PI * this._radius * this._radius * this._density;
+        let radius = this.getRadius();
+
+        return Math.PI * radius * radius * this._density;
     }
 
     getParentPhysicsBody() {
