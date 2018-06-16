@@ -9,6 +9,8 @@ const MitoMathHelper = require('./MitoMathHelper');
 
 const MitoCircle = class MitoCircle {
     constructor() {
+        this._id = MitoCircle._nextID++;
+
         this._parentPhysicsBody = null;
 
         this._position = [0, 0];
@@ -18,6 +20,10 @@ const MitoCircle = class MitoCircle {
         this._density = 0.001;
 
         this._boundingCircle = new MitoBoundingCircle();
+    }
+
+    getID() {
+        return this._id;
     }
 
     getPosition() {
@@ -71,14 +77,14 @@ const MitoCircle = class MitoCircle {
         return this._scale;
     }
 
-    setScale(scale) {
-        this._scale = scale;
-    }
-
     getWorldScale() {
         let parentScale = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldScale() : 1;
 
         return parentScale * this._scale;
+    }
+
+    setScale(scale) {
+        this._scale = scale;
     }
 
     getDensity() {
@@ -107,5 +113,7 @@ const MitoCircle = class MitoCircle {
         this._parentPhysicsBody = physicsBody;
     }
 };
+
+MitoCircle._nextID = 1;
 
 module.exports = MitoCircle;

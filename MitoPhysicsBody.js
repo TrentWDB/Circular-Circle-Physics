@@ -4,7 +4,6 @@
 
 const MitoBoundingCircle = require('./MitoBoundingCircle');
 const MitoMathHelper = require('./MitoMathHelper');
-const MitoPhysicsWorld = require('./MitoPhysicsWorld');
 
 'use strict';
 
@@ -121,10 +120,15 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     }
 
     getWorldVelocity() {
-        let parentVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldVelocity() : [0, 0];
-        let parentAngularVelocity = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldAngularVelocity() : 0;
+        // TODO I could probably make all this shit faster because the only thing that will ever have a velocity or angular velocity is the root physics body
+        if (!this._parentPhysicsBody) {
+            return this.getVelocity();
+        }
 
-        let parentPosition = this._parentPhysicsBody ? this._parentPhysicsBody.getWorldPosition() : [0, 0];
+        let parentVelocity = this._parentPhysicsBody.getWorldVelocity();
+        let parentAngularVelocity = this._parentPhysicsBody.getWorldAngularVelocity();
+
+        let parentPosition = this._parentPhysicsBody.getWorldPosition();
         let worldPosition = this.getWorldPosition();
         let rotatedPosition = [worldPosition[0] - parentPosition[0], worldPosition[1] - parentPosition[1]];
 
@@ -344,33 +348,6 @@ const MitoPhysicsBody = class MitoPhysicsBody {
 
         this._momentOfInertia = momentOfInertia * 4;
     }
-
-    // updateMomentOfInertia() {
-    //     // requires mass and center of mass to be updated
-    //     let momentOfInertia = 0;
-    //
-    //     for (let i = 0; i < this._physicsBodyList.length; i++) {
-    //         let childMass = this._physicsBodyList[i].getMass();
-    //         let childCenterOfMass = this._physicsBodyList[i].getCenterOfMass();
-    //         let dx = childCenterOfMass[0] - this._centerOfMass[0];
-    //         let dy = childCenterOfMass[1] - this._centerOfMass[1];
-    //         let inertiaRadius = dx * dx + dy * dy;
-    //
-    //         momentOfInertia += childMass * inertiaRadius;
-    //     }
-    //
-    //     for (let i = 0; i < this._circleList.length; i++) {
-    //         let circleMass = this._circleList[i].getMass();
-    //         let circleCenterOfMass = this._circleList[i].getPosition();
-    //         let dx = circleCenterOfMass[0] - this._centerOfMass[0];
-    //         let dy = circleCenterOfMass[1] - this._centerOfMass[1];
-    //         let inertiaRadius = dx * dx + dy * dy;
-    //
-    //         momentOfInertia += circleMass * inertiaRadius;
-    //     }
-    //
-    //     this._momentOfInertia = momentOfInertia;
-    // }
 
     getElasticity() {
         return this._elasticity;

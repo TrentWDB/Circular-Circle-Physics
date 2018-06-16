@@ -182,13 +182,6 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
             this._determinePhysicsBodyCollisions(physicsBodyListA[i], bodyB, interval, timeOffset);
         }
 
-        // all children
-        for (let i = 0; i < physicsBodyListA.length; i++) {
-            for (let a = 0; a < physicsBodyListB.length; a++) {
-                this._determinePhysicsBodyCollisions(physicsBodyListA[i], physicsBodyListB[a], interval, timeOffset);
-            }
-        }
-
         // test circles within these physics objects if applicable
         let circleListA = bodyA.getCircleList();
         let circleListB = bodyB.getCircleList();
@@ -220,6 +213,13 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 // push the collision event info
                 let time = timeOffset + relativeTime;
                 let collisionEvent = this._createCollisionEvent(time, bodyA, bodyB, collisionPoint, collisionNormalB, circleVelocityA, circleVelocityB);
+
+                let duplicate = (this._collisionTimesToCollisionEventListMap[time] || []).find(existingEvent => {
+                    return this._equivalentCollisionEvents(existingEvent, collisionEvent);
+                });
+                if (duplicate) {
+                    continue;
+                }
 
                 this._collisionTimesQueue.insert(time);
 
@@ -276,6 +276,20 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
             pointVelocityA: collisionPointVelocityA,
             pointVelocityB: collisionPointVelocityB,
         }
+    }
+    
+    _equivalentCollisionEvents(eventA, eventB) {
+        return eventA.time === eventB.time &&
+            eventA.bodyA.getID() === eventB.bodyA.getID() &&
+            eventA.bodyB.getID() === eventB.bodyB.getID() &&
+            eventA.point[0] === eventB.point[0] &&
+            eventA.point[1] === eventB.point[1] &&
+            eventA.normal[0] === eventB.normal[0] &&
+            eventA.normal[1] === eventB.normal[1] &&
+            eventA.pointVelocityA[0] === eventB.pointVelocityA[0] &&
+            eventA.pointVelocityA[1] === eventB.pointVelocityA[1] &&
+            eventA.pointVelocityB[0] === eventB.pointVelocityB[0] &&
+            eventA.pointVelocityB[1] === eventB.pointVelocityB[1];
     }
 };
 

@@ -40,7 +40,7 @@ const MitoMathHelper = class MitoMathHelper {
      * @param interval
      * @returns {?number}
      */
-    static detectMitoCircleCollisionTime(circleA, circleB, interval) {
+    static detectMitoCircleCollisionTime(circleA, circleB, interval, debug) {
         let positionA = circleA.getWorldPosition();
         let positionB = circleB.getWorldPosition();
         let velocityA = circleA.getWorldVelocity();
