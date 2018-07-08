@@ -3,20 +3,26 @@
  */
 
 const MitoMathHelper = require('./MitoMathHelper');
-const MitoPriorityQueue = require('./MitoPriorityQueue');
+const MitoPriorityQueueSet = require('./MitoPriorityQueueSet');
 
 'use strict';
 
 const MitoPhysicsWorld = class MitoPhysicsWorld {
     constructor() {
-        this._collisionTimesQueue = new MitoPriorityQueue();
+        // used to skip forward in time to when the collisions happen and process them
+        this._collisionTimesQueue = new MitoPriorityQueueSet();
         this._collisionTimesToCollisionEventListMap = {};
 
+        // once a physics body is processed all future events are removed from the queue, so this is used
+        this._physicsBodyIDToCollisionTimeListMap = {};
+
+        // world information that's used to get all physics bodies and map them to their ids
         this._physicsBodyList = [];
         this._physicsBodyIDToPhysicsBodyMap = {};
 
+        // used later in the loop to reprocess objects after their collisions were resolved
         this._unprocessedPhysicsBodyIDSet = {};
-        this._physicsBodyIDToCollisionEventListMap = {};
+        this._physicsBodyIDToCollisionEventListMap = {}; // TODO can remove this?
     }
 
     update(interval) {
@@ -70,37 +76,43 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
             }
 
             // remove all collision events that include the unprocessed physics bodies
+            // let unprocessedPhysicsBodyIDList = Object.keys(this._unprocessedPhysicsBodyIDSet);
+            // for (let i = 0; i < unprocessedPhysicsBodyIDList.length; i++) {
+            //     let physicsBodyID = unprocessedPhysicsBodyIDList[i];
+            //     let physicsBody = this._physicsBodyIDToPhysicsBodyMap[physicsBodyID];
+            //     let collisionEventList = this._physicsBodyIDToCollisionEventListMap[physicsBody.getID()];
+            //
+            //     // if there are no collision events its because the collided physics body already handled it
+            //     if (!collisionEventList) {
+            //         continue;
+            //     }
+            //
+            //     for (let a = 0; a < collisionEventList.length; a++) {
+            //         let event = collisionEventList[a];
+            //         let time = event.time;
+            //
+            //         // remove the current event from the event list
+            //         if (this._collisionTimesToCollisionEventListMap[time]) {
+            //             this._collisionTimesToCollisionEventListMap[time] = this._collisionTimesToCollisionEventListMap[time].filter(currentEvent => {
+            //                 return currentEvent !== event;
+            //             });
+            //
+            //             // if the new event list is empty then delete it and remove its queue entry
+            //             if (this._collisionTimesToCollisionEventListMap[time].length === 0) {
+            //                 this._collisionTimesQueue.remove(time);
+            //                 delete this._collisionTimesToCollisionEventListMap[time];
+            //             }
+            //         }
+            //     }
+            //
+            //     // delete the processed physics body id to event list entry
+            //     delete this._physicsBodyIDToCollisionEventListMap[physicsBody.getID()];
+            // }
             let unprocessedPhysicsBodyIDList = Object.keys(this._unprocessedPhysicsBodyIDSet);
             for (let i = 0; i < unprocessedPhysicsBodyIDList.length; i++) {
                 let physicsBodyID = unprocessedPhysicsBodyIDList[i];
-                let physicsBody = this._physicsBodyIDToPhysicsBodyMap[physicsBodyID];
-                let collisionEventList = this._physicsBodyIDToCollisionEventListMap[physicsBody.getID()];
 
-                // if there are no collision events its because the collided physics body already handled it
-                if (!collisionEventList) {
-                    continue;
-                }
-
-                for (let a = 0; a < collisionEventList.length; a++) {
-                    let event = collisionEventList[a];
-                    let time = event.time;
-
-                    // remove the current event from the event list
-                    if (this._collisionTimesToCollisionEventListMap[time]) {
-                        this._collisionTimesToCollisionEventListMap[time] = this._collisionTimesToCollisionEventListMap[time].filter(currentEvent => {
-                            return currentEvent !== event;
-                        });
-
-                        // if the new event list is empty then delete it and remove its queue entry
-                        if (this._collisionTimesToCollisionEventListMap[time].length === 0) {
-                            this._collisionTimesQueue.remove(time);
-                            delete this._collisionTimesToCollisionEventListMap[time];
-                        }
-                    }
-                }
-
-                // delete the processed physics body id to event list entry
-                delete this._physicsBodyIDToCollisionEventListMap[physicsBody.getID()];
+                this._removeCollisionEvents(physicsBodyID);
             }
 
             // process the unprocessed/updated physics bodies
@@ -122,7 +134,32 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 }
             }
 
+
+            // DEBUG
+            console.log('DEBUG');
+            console.log(this._collisionTimesQueue);
+            let eventTimes = Object.keys(this._collisionTimesToCollisionEventListMap);
+            for (let i = 0; i < eventTimes.length; i++) {
+                let eventTime = eventTimes[i];
+                let eventList = this._collisionTimesToCollisionEventListMap[eventTime];
+
+                console.log('time: ' + eventTime);
+                for (let a = 0; a < eventList.length; a++) {
+                    let event = eventList[a];
+
+                    console.log('event number: ' + a);
+                    console.log('point: ' + event.point[0] + ',' + event.point[1]);
+                    console.log('normal: ' + event.normal[0] + ',' + event.normal[1]);
+                    console.log('pointVelocityA: ' + event.pointVelocityA[0] + ',' + event.pointVelocityA[1]);
+                    console.log('pointVelocityB: ' + event.pointVelocityB[0] + ',' + event.pointVelocityB[1]);
+                }
+            }
+            // END DEBUG
+
+
             this._unprocessedPhysicsBodyIDSet = {};
+            this._physicsBodyIDToCollisionEventListMap = {};
+            this._physicsBodyIDToCollisionTimeListMap = {};
 
             // move forward in time to the next collision or the end of the tick
             let nextCollisionTime = this._collisionTimesQueue.pop();
@@ -136,6 +173,9 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
 
             processedInterval = nextCollisionTime;
         }
+
+        this._collisionTimesQueue.clear();
+        this._collisionTimesToCollisionEventListMap = {};
     }
 
     addPhysicsBody(physicsBody) {
@@ -152,7 +192,32 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
         this._physicsBodyList = this._physicsBodyList.filter(currentPhysicsBody => currentPhysicsBody.getID() !== physicsBody.getID());
         delete this._physicsBodyIDToPhysicsBodyMap[physicsBody.getID()];
 
+        this._removeCollisionEvents(physicsBody.getID());
+
         return true;
+    }
+
+    _removeCollisionEvents(physicsBodyID) {
+        let times = this._physicsBodyIDToCollisionTimeListMap[physicsBodyID] || [];
+
+        for (let i = 0; i < times.length; i++) {
+            let time = times[i];
+
+            let collisionEvents = this._collisionTimesToCollisionEventListMap[time];
+            if (!collisionEvents) {
+                continue;
+            }
+
+            // keep the event if neither physics body is the one being removed
+            this._collisionTimesToCollisionEventListMap[time] = collisionEvents.filter(event => {
+                return event.bodyA.getID() !== physicsBodyID && event.bodyB.getID() !== physicsBodyID;
+            });
+
+            if (this._collisionTimesToCollisionEventListMap[time].length === 0) {
+                delete this._collisionTimesToCollisionEventListMap[time];
+                this._collisionTimesQueue.remove(time);
+            }
+        }
     }
 
     _determinePhysicsBodyCollisions(bodyA, bodyB, interval, timeOffset) {
@@ -226,6 +291,14 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
                 this._collisionTimesToCollisionEventListMap[time] = this._collisionTimesToCollisionEventListMap[time] || [];
                 this._collisionTimesToCollisionEventListMap[time].push(collisionEvent);
 
+                // push the time into the body id map
+                this._physicsBodyIDToCollisionTimeListMap[bodyA.getID()] = this._physicsBodyIDToCollisionTimeListMap[bodyA.getID()] || [];
+                this._physicsBodyIDToCollisionTimeListMap[bodyA.getID()].push(time);
+
+                this._physicsBodyIDToCollisionTimeListMap[bodyB.getID()] = this._physicsBodyIDToCollisionTimeListMap[bodyB.getID()] || [];
+                this._physicsBodyIDToCollisionTimeListMap[bodyB.getID()].push(time);
+
+                // push the event into the body id map
                 this._physicsBodyIDToCollisionEventListMap[bodyA.getID()] = this._physicsBodyIDToCollisionEventListMap[bodyA.getID()] || [];
                 this._physicsBodyIDToCollisionEventListMap[bodyA.getID()].push(collisionEvent);
 
@@ -279,17 +352,33 @@ const MitoPhysicsWorld = class MitoPhysicsWorld {
     }
     
     _equivalentCollisionEvents(eventA, eventB) {
-        return eventA.time === eventB.time &&
+        let regular = eventA.time === eventB.time &&
             eventA.bodyA.getID() === eventB.bodyA.getID() &&
             eventA.bodyB.getID() === eventB.bodyB.getID() &&
             eventA.point[0] === eventB.point[0] &&
             eventA.point[1] === eventB.point[1] &&
-            eventA.normal[0] === eventB.normal[0] &&
-            eventA.normal[1] === eventB.normal[1] &&
             eventA.pointVelocityA[0] === eventB.pointVelocityA[0] &&
             eventA.pointVelocityA[1] === eventB.pointVelocityA[1] &&
             eventA.pointVelocityB[0] === eventB.pointVelocityB[0] &&
             eventA.pointVelocityB[1] === eventB.pointVelocityB[1];
+        if (regular) {
+            return true;
+        }
+
+        let inverted = eventA.time === eventB.time &&
+            eventA.bodyA.getID() === eventB.bodyB.getID() &&
+            eventA.bodyB.getID() === eventB.bodyA.getID() &&
+            eventA.point[0] === eventB.point[0] &&
+            eventA.point[1] === eventB.point[1] &&
+            eventA.pointVelocityA[0] === eventB.pointVelocityB[0] &&
+            eventA.pointVelocityA[1] === eventB.pointVelocityB[1] &&
+            eventA.pointVelocityB[0] === eventB.pointVelocityA[0] &&
+            eventA.pointVelocityB[1] === eventB.pointVelocityA[1];
+        if (inverted) {
+            return true;
+        }
+
+        return false;
     }
 };
 

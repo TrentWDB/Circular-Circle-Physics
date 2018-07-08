@@ -9,7 +9,7 @@ const MitoMathHelper = require('./MitoMathHelper');
 
 const MitoCircle = class MitoCircle {
     constructor() {
-        this._id = MitoCircle._nextID++;
+        this._id = String(MitoCircle._nextID++);
 
         this._parentPhysicsBody = null;
 

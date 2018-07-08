@@ -9,7 +9,7 @@ const MitoMathHelper = require('./MitoMathHelper');
 
 const MitoPhysicsBody = class MitoPhysicsBody {
     constructor() {
-        this._id = MitoPhysicsBody._nextID++;
+        this._id = String(MitoPhysicsBody._nextID++);
 
         this._parentPhysicsBody = null;
 
@@ -334,14 +334,17 @@ const MitoPhysicsBody = class MitoPhysicsBody {
         // requires mass and center of mass to be updated
         let momentOfInertia = 0;
 
+        let parentPosition = this.getWorldPosition();
+
         let completeCircleList = this.getCompleteCircleList();
         for (let i = 0; i < completeCircleList.length; i++) {
             let circle = completeCircleList[i];
-            let position = circle.getPosition();
+            let worldPosition = circle.getWorldPosition();
+            let relativePosition = [worldPosition[0] - parentPosition[0], worldPosition[1] - parentPosition[1]];
             let density = circle.getDensity();
             let radius = circle.getRadius();
-            let dx = position[0] - this._centerOfMass[0];
-            let dy = position[1] - this._centerOfMass[1];
+            let dx = relativePosition[0] - this._centerOfMass[0];
+            let dy = relativePosition[1] - this._centerOfMass[1];
 
             momentOfInertia += 0.5 * Math.PI * density * radius * radius * (2 * dx * dx + 2 * dy * dy + radius * radius);
         }
@@ -435,7 +438,7 @@ const MitoPhysicsBody = class MitoPhysicsBody {
     }
 
     static getNewCollisionGroup() {
-        return MitoPhysicsBody._nextCollisionGroup++;
+        return String(MitoPhysicsBody._nextCollisionGroup++);
     }
 };
 
